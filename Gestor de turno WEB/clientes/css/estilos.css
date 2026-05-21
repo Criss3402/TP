@@ -1,0 +1,92 @@
+/* ── Reset y base ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep:    #0f172a;   /* Fondo principal */
+  --bg-card:    #1e293b;   /* Fondo de tarjetas */
+  --bg-input:   #0f172a;   /* Fondo de inputs */
+  --border:     #334155;   /* Bordes sutiles */
+  --text-main:  #e2e8f0;   /* Texto principal */
+  --text-muted: #64748b;   /* Texto secundario */
+  --accent:     #3b82f6;   /* Azul principal */
+  --accent-h:   #2563eb;   /* Hover del azul */
+  --success:    #059669;
+  --danger:     #dc2626;
+  --warning:    #f59e0b;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+/* ── Scrollbar personalizada ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Animaciones ───────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.3s ease; }
+
+/* ── Componentes reutilizables ─────────────────────────────────────────── */
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background 0.2s, transform 0.1s; }
+.btn:active { transform: scale(0.98); }
+.btn-primary  { background: var(--accent);   color: #fff; }
+.btn-primary:hover  { background: var(--accent-h); }
+.btn-success  { background: var(--success);  color: #fff; }
+.btn-success:hover  { background: #047857; }
+.btn-danger   { background: var(--danger);   color: #fff; }
+.btn-danger:hover   { background: #b91c1c; }
+.btn-ghost    { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+.btn-ghost:hover    { background: var(--bg-card); color: var(--text-main); }
+.btn-small    { padding: 5px 12px; font-size: 12px; }
+
+.input { width: 100%; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px; }
+.input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.field { margin-bottom: 16px; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.error-msg { color: #f87171; font-size: 13px; margin-bottom: 12px; }
+
+/* ── Layout principal ──────────────────────────────────────────────────── */
+#app-layout { display: flex; min-height: 100vh; }
+#sidebar { width: 240px; background: var(--bg-deep); border-right: 1px solid var(--border); padding: 24px 12px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.sidebar-header { padding: 0 8px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; cursor: pointer; color: var(--text-muted); font-size: 14px; transition: all 0.2s; margin-bottom: 2px; }
+.nav-item:hover  { background: var(--bg-card); color: var(--text-main); }
+.nav-item.active { background: #1d4ed8; color: #fff; }
+.nav-badge { margin-left: auto; background: var(--danger); color: #fff; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+#main-content { flex: 1; padding: 28px; overflow-y: auto; }
+.page-title   { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.page-subtitle { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; }
+.grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.grid-branches { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+
+/* ── Tabla de datos ──────────────────────────────────────────────────── */
+.table-wrapper { overflow: hidden; border-radius: 12px; border: 1px solid var(--border); }
+table    { width: 100%; border-collapse: collapse; }
+th       { text-align: left; padding: 10px 14px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: var(--bg-card); }
+td       { padding: 12px 14px; border-bottom: 1px solid #1e293b; font-size: 14px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(30, 41, 59, 0.4); }
+
+/* ── UI Adicional (Modal, Notificaciones, Autenticación) ──────────────── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 420px; max-width: 90vw; }
+#notification { position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); display: none; animation: fadeIn 0.3s ease; }
+.steps-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+.step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; border: 2px solid var(--border); transition: all 0.3s; }
+.step-dot.done   { background: var(--accent); border-color: var(--accent); color: #fff; }
+.step-dot.active { border-color: var(--accent); color: var(--accent); }
+.branch-card { background: var(--bg-card); border: 2px solid var(--border); border-radius: 12px; padding: 18px 14px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+.branch-card:hover  { border-color: #475569; }
+.branch-card.selected { border-color: var(--selected-color, var(--accent)); }
+.auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.auth-box { width: 100%; max-width: 420px; }
