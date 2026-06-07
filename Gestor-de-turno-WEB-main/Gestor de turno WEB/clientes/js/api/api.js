@@ -150,6 +150,36 @@ const api = {
     return { success: true };
   },
 
+  crearPaciente: async (datos) => {
+    const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase
+      .from('usuarios')
+      .insert([{ email: datos.email, contrasenia: datos.password, rol: 'paciente' }])
+      .select();
+
+    if (errorUsuario) {
+      if (errorUsuario.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
+      return { success: false, error: 'No se pudo crear la cuenta.' };
+    }
+
+    const idGenerado = usuarioCreado[0].id_usuario;
+
+    const { error: errorPaciente } = await clienteSupabase
+      .from('pacientes')
+      .insert([{
+        id_paciente: idGenerado,
+        nombre:      datos.nombre,
+        apellido:    datos.apellido,
+        dni:         datos.dni,
+        telefono:    datos.telefono
+      }]);
+
+    if (errorPaciente) {
+      if (errorPaciente.code === '23505') return { success: false, error: 'Ese DNI ya está registrado.' };
+      return { success: false, error: 'No se pudo crear el perfil del paciente.' };
+    }
+    return { success: true };
+  },
+
   crearTurno: async (datosTurno) => {
     const { error } = await clienteSupabase
       .from('turnos')
@@ -205,6 +235,50 @@ const api = {
     if (error) {
       console.error('Error al eliminar:', error);
       return { success: false, error: 'No se puede borrar si hay médicos asignados a esta rama.' };
+    }
+    return { success: true };
+  },
+
+  getAgendas: async () => {
+    const { data, error } = await clienteSupabase.from('horarios_atencion').select('*');
+    if (error) {
+      console.error('Error al obtener agendas:', error);
+      return { success: false, data: [] };
+    }
+    const adaptadas = data.map(a => ({
+      id:         a.id_horario,
+      doctorId:   a.id_medico,
+      diaSemana:  a.dia_semana,
+      horaInicio: a.hora_inicio,
+      horaFin:    a.hora_fin
+    }));
+    return { success: true, data: adaptadas };
+  },
+
+  crearAgenda: async (datos) => {
+    const { error } = await clienteSupabase
+      .from('horarios_atencion')
+      .insert([{
+        id_medico:   datos.doctorId,
+        dia_semana:  datos.diaSemana,
+        hora_inicio: datos.horaInicio,
+        hora_fin:    datos.horaFin
+      }]);
+    if (error) {
+      console.error('Error al crear agenda:', error);
+      return { success: false, error: 'No se pudo guardar el horario.' };
+    }
+    return { success: true };
+  },
+
+  borrarAgenda: async (idAgenda) => {
+    const { error } = await clienteSupabase
+      .from('horarios_atencion')
+      .delete()
+      .eq('id_horario', idAgenda);
+    if (error) {
+      console.error('Error al eliminar agenda:', error);
+      return { success: false, error: 'No se pudo eliminar el horario.' };
     }
     return { success: true };
   }
