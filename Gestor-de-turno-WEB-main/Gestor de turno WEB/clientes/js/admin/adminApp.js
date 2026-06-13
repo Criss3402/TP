@@ -4,29 +4,44 @@ function abrirFormEditarUsuario(id) {
   const usr = estado.usuarios.find(u => u.id === id);
   if (!usr) return;
   document.getElementById('usr-sys-titulo').innerText = '✏️ Editando: ' + usr.nombreCompleto;
-  document.getElementById('usr-sys-id').value    = usr.id;
-  document.getElementById('usr-sys-email').value = usr.username;
-  document.getElementById('usr-sys-rol').value   = usr.rol === 'DOCTOR' ? 'medico' : usr.rol.toLowerCase();
-  document.getElementById('usr-sys-pass').value  = '';
+  document.getElementById('usr-sys-id').value      = usr.id;
+  const partes = usr.nombreCompleto.split(' ');
+  document.getElementById('usr-sys-nombre').value  = partes[0] || '';
+  document.getElementById('usr-sys-apellido').value= partes.slice(1).join(' ') || '';
+  document.getElementById('usr-sys-dni').value     = usr.dni || '';
+  document.getElementById('usr-sys-tel').value     = usr.telefono || '';
+  document.getElementById('usr-sys-email').value   = usr.username;
+  document.getElementById('usr-sys-rol').value     = usr.rol === 'DOCTOR' ? 'medico' : usr.rol.toLowerCase();
+  document.getElementById('usr-sys-pass').value    = '';
 }
 
 async function guardarUsuarioSistema() {
   const id       = document.getElementById('usr-sys-id').value;
+  const nombre   = document.getElementById('usr-sys-nombre').value.trim();
+  const apellido = document.getElementById('usr-sys-apellido').value.trim();
+  const dni      = document.getElementById('usr-sys-dni').value.trim();
+  const telefono = document.getElementById('usr-sys-tel').value.trim();
   const email    = document.getElementById('usr-sys-email').value.trim();
   const rol      = document.getElementById('usr-sys-rol').value;
   const password = document.getElementById('usr-sys-pass').value;
 
-  if (!email || !rol) { notificar('Completá email y rol.', 'error'); return; }
+  if (!nombre || !apellido || !dni || !email || !rol) {
+    notificar('Completá nombre, apellido, DNI, email y rol.', 'error');
+    return;
+  }
 
   if (id) {
-    const datos = { email, rol };
+    const datos = { email, rol, nombre, apellido, dni, telefono };
     if (password) datos.password = password;
     const r = await api.actualizarUsuarioGenerico(id, datos);
     if (!r.success) { notificar('❌ ' + r.error, 'error'); return; }
     notificar('✅ Usuario actualizado.');
   } else {
-    if (!password || password.length < 4) { notificar('Ingresá una contraseña de al menos 4 caracteres.', 'error'); return; }
-    const r = await api.crearUsuarioGenerico(email, password, rol);
+    if (!password || password.length < 4) {
+      notificar('Ingresá una contraseña de al menos 4 caracteres.', 'error');
+      return;
+    }
+    const r = await api.crearUsuarioGenerico(email, password, rol, nombre, apellido, dni, telefono);
     if (!r.success) { notificar('❌ ' + r.error, 'error'); return; }
     notificar('✅ Usuario creado.');
   }

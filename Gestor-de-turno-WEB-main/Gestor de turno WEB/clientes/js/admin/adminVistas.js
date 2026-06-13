@@ -1,23 +1,21 @@
 function renderUsuarios() {
-  const { usuarios, especialidades } = estado;
+  const { usuarios } = estado;
 
-  const filasHTML = usuarios.length === 0
-    ? `<tr><td colspan="5" style="text-align:center; padding:30px; color:${COLOR_MINT.lightGray};">No hay usuarios registrados.</td></tr>`
-    : usuarios.map(u => {
-        const esp = especialidades.find(e => e.id == u.especialidadId);
-        return `
-          <tr style="border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
-            <td style="padding:14px 12px; color:${COLOR_MINT.emeraldDark};"><strong>${u.nombreCompleto}</strong></td>
-            <td style="padding:14px 12px; color:${COLOR_MINT.lightGray};">${u.username}</td>
-            <td style="padding:14px 12px;">${badgeRol(u.rol)}</td>
-            <td style="padding:14px 12px; color:${COLOR_MINT.emeraldDark};">${esp ? esp.nombre : '—'}</td>
-            <td style="padding:14px 12px; text-align:right; display:flex; gap:6px; justify-content:flex-end;">
-              <button class="btn btn-ghost" style="border:1px solid ${COLOR_MINT.mintLight}; color:${COLOR_MINT.emeraldDark}; font-size:12px; padding:6px 12px; font-weight:600;" onclick="abrirFormEditarUsuario(${u.id})">✏️ Editar</button>
-              <button class="btn" style="border:1px solid #dc2626; color:#dc2626; font-size:12px; padding:6px 12px; font-weight:600; background:transparent; border-radius:4px; cursor:pointer;" onclick="eliminarUsuarioSistema(${u.id}, '${u.nombreCompleto}')">🗑️ Eliminar</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+  const usuariosFiltrados = usuarios.filter(u => u.rol !== 'DOCTOR');
+
+  const filasHTML = usuariosFiltrados.length === 0
+    ? `<tr><td colspan="4" style="text-align:center; padding:30px; color:${COLOR_MINT.lightGray};">No hay usuarios registrados.</td></tr>`
+    : usuariosFiltrados.map(u => `
+        <tr style="border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
+          <td style="padding:14px 12px; color:${COLOR_MINT.emeraldDark};"><strong>${u.nombreCompleto}</strong></td>
+          <td style="padding:14px 12px; color:${COLOR_MINT.lightGray};">${u.username}</td>
+          <td style="padding:14px 12px;">${badgeRol(u.rol)}</td>
+          <td style="padding:14px 12px; text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+            <button class="btn btn-ghost" style="border:1px solid ${COLOR_MINT.mintLight}; color:${COLOR_MINT.emeraldDark}; font-size:12px; padding:6px 12px; font-weight:600;" onclick="abrirFormEditarUsuario(${u.id})">✏️ Editar</button>
+            <button class="btn" style="border:1px solid #dc2626; color:#dc2626; font-size:12px; padding:6px 12px; font-weight:600; background:transparent; border-radius:4px; cursor:pointer;" onclick="eliminarUsuarioSistema(${u.id}, '${u.nombreCompleto}')">🗑️ Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
 
   renderizar(`
     <div id="app-layout">${htmlSidebar('usuarios')}<div id="main-content" class="fade-in" style="background-color:${COLOR_MINT.bgTint}; min-height:100vh;">
@@ -27,17 +25,32 @@ function renderUsuarios() {
         <h3 id="usr-sys-titulo" style="font-weight:700; margin-bottom:16px; color:${COLOR_MINT.emeraldDark};">➕ Agregar Usuario</h3>
         <input type="hidden" id="usr-sys-id">
         <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;">
-          <div class="field" style="flex:2; min-width:220px; margin-bottom:0;">
+          <div class="field" style="flex:1; min-width:160px; margin-bottom:0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size:13px;">Nombre</label>
+            <input id="usr-sys-nombre" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;" placeholder="Ej: Juan" />
+          </div>
+          <div class="field" style="flex:1; min-width:160px; margin-bottom:0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size:13px;">Apellido</label>
+            <input id="usr-sys-apellido" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;" placeholder="Ej: Pérez" />
+          </div>
+          <div class="field" style="flex:1; min-width:120px; margin-bottom:0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size:13px;">DNI</label>
+            <input id="usr-sys-dni" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;" placeholder="Ej: 30123456" />
+          </div>
+          <div class="field" style="flex:1; min-width:130px; margin-bottom:0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size:13px;">Teléfono</label>
+            <input id="usr-sys-tel" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;" placeholder="Ej: 3777-123456" />
+          </div>
+          <div class="field" style="flex:2; min-width:200px; margin-bottom:0;">
             <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size:13px;">Correo electrónico</label>
             <input id="usr-sys-email" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;" placeholder="Ej: usuario@hospital.com" />
           </div>
-          <div class="field" style="flex:1; min-width:150px; margin-bottom:0;">
+          <div class="field" style="flex:1; min-width:130px; margin-bottom:0;">
             <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size:13px;">Rol</label>
             <select id="usr-sys-rol" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;">
               <option value="admin">Admin</option>
-              <option value="medico">Doctor</option>
-              <option value="paciente">Paciente</option>
               <option value="recepcionista">Recepcionista</option>
+              <option value="paciente">Paciente</option>
             </select>
           </div>
           <div class="field" style="flex:1; min-width:180px; margin-bottom:0;">
@@ -57,7 +70,6 @@ function renderUsuarios() {
                 <th style="padding:16px 12px;">Nombre</th>
                 <th style="padding:16px 12px;">Email</th>
                 <th style="padding:16px 12px;">Rol</th>
-                <th style="padding:16px 12px;">Especialidad</th>
                 <th style="padding:16px 12px; text-align:right;">Acciones</th>
               </tr>
             </thead>
@@ -68,7 +80,6 @@ function renderUsuarios() {
     </div></div>
   `);
 }
-
 function renderEspecialidades() {
   const { especialidades } = estado;
   

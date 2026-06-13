@@ -93,38 +93,43 @@ const api = {
   },
 
   getUsuarios: async () => {
-    const { data, error } = await clienteSupabase.from('usuarios').select('*, medicos(*), pacientes(*)');
-    if (error) return { success: false, data: [] };
+  const { data, error } = await clienteSupabase.from('usuarios').select('*, medicos(*), pacientes(*)');
+  if (error) return { success: false, data: [] };
 
-    const usuariosAdaptados = data.map(usr => {
-        const med = extraerPerfil(usr.medicos);
-        const pac = extraerPerfil(usr.pacientes);
-        
-        let nombre = 'Admin', apellido = 'General', especialidadId = null;
+  const usuariosAdaptados = data.map(usr => {
+      const med = extraerPerfil(usr.medicos);
+      const pac = extraerPerfil(usr.pacientes);
+      
+      let nombre = 'Sin', apellido = 'Nombre', especialidadId = null;
 
-        if (med && med.nombre) {
-            nombre = med.nombre;
-            apellido = med.apellido;
-            especialidadId = med.id_especialidad;
-        } else if (pac && pac.nombre) {
-            nombre = pac.nombre;
-            apellido = pac.apellido;
-        }
+      if (med && med.nombre) {
+          nombre = med.nombre;
+          apellido = med.apellido;
+          especialidadId = med.id_especialidad;
+      } else if (pac && pac.nombre) {
+          nombre = pac.nombre;
+          apellido = pac.apellido;
+      } else if (usr.nombre) {
+          nombre = usr.nombre;
+          apellido = usr.apellido || '';
+      }
 
-        let rolFrontend = usr.rol.toUpperCase();
-        if (usr.rol === 'medico') rolFrontend = 'DOCTOR';
-        if (usr.rol === 'recepcionista') rolFrontend = 'RECEPCIONISTA';
+      let rolFrontend = usr.rol.toUpperCase();
+      if (usr.rol === 'medico') rolFrontend = 'DOCTOR';
+      if (usr.rol === 'recepcionista') rolFrontend = 'RECEPCIONISTA';
 
-        return {
-            id: usr.id_usuario,
-            username: usr.email, 
-            rol: rolFrontend, 
-            especialidadId: especialidadId,
-            nombreCompleto: `${nombre} ${apellido}`.trim()
-        };
-    });
-    return { success: true, data: usuariosAdaptados };
-  },
+      return {
+          id: usr.id_usuario,
+          username: usr.email, 
+          rol: rolFrontend, 
+          especialidadId: especialidadId,
+          dni: usr.dni || '',
+          telefono: usr.telefono || '',
+          nombreCompleto: `${nombre} ${apellido}`.trim()
+      };
+  });
+  return { success: true, data: usuariosAdaptados };
+},
   
   crearMedico: async (datos) => {
     const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase

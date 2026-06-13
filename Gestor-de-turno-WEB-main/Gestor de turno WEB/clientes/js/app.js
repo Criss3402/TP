@@ -124,10 +124,10 @@ if (window.location.hash !== '') {
 }
 
 // Crear usuario genérico (admin u otro rol sin perfil extra)
-api.crearUsuarioGenerico = async (email, password, rol) => {
+api.crearUsuarioGenerico = async (email, password, rol, nombre, apellido, dni, telefono) => {
     const { error } = await clienteSupabase
         .from('usuarios')
-        .insert([{ email, contrasenia: password, rol }]);
+        .insert([{ email, contrasenia: password, rol, nombre, apellido, dni, telefono }]);
     if (error) {
         if (error.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
         return { success: false, error: error.message };
@@ -138,9 +138,13 @@ api.crearUsuarioGenerico = async (email, password, rol) => {
 // Actualizar email y/o contraseña de cualquier usuario
 api.actualizarUsuarioGenerico = async (idUsuario, datos) => {
     const campos = {};
-    if (datos.email) campos.email = datos.email;
+    if (datos.email)    campos.email      = datos.email;
     if (datos.password) campos.contrasenia = datos.password;
-    if (datos.rol) campos.rol = datos.rol;
+    if (datos.rol)      campos.rol        = datos.rol;
+    if (datos.nombre)   campos.nombre     = datos.nombre;
+    if (datos.apellido) campos.apellido   = datos.apellido;
+    if (datos.dni)      campos.dni        = datos.dni;
+    if (datos.telefono) campos.telefono   = datos.telefono;
     const { error } = await clienteSupabase
         .from('usuarios')
         .update(campos)
@@ -148,7 +152,6 @@ api.actualizarUsuarioGenerico = async (idUsuario, datos) => {
     if (error) return { success: false, error: error.message };
     return { success: true };
 };
-
 // Eliminar cualquier usuario (y sus perfiles relacionados por CASCADE)
 api.eliminarUsuarioGenerico = async (idUsuario) => {
     const { error } = await clienteSupabase
