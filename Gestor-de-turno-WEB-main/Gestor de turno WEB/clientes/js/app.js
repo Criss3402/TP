@@ -54,12 +54,11 @@ async function ejecutarRegistroPaciente() {
 async function cerrarSesion() {
   estado.token = null;
   estado.usuario = null;
-  window.location.hash = ''; // Limpia la URL de cualquier rastro
+  window.location.hash = '';
   mostrarPantallaInicio(); 
 }
 
 async function cargarDatosIniciales() {
-  // Carga real de todas las colecciones necesarias en memoria
   const [resEsp, resTurnos, resUsr, resAgendas] = await Promise.all([
     api.getEspecialidades(),
     api.getTurnos(),
@@ -72,7 +71,6 @@ async function cargarDatosIniciales() {
   if (resAgendas.success) estado.agendas        = resAgendas.data;
 }
 
-// La función navegarA ahora solo se encarga de cambiar la URL en el navegador
 function navegarA(seccion) {
   if (!tienePermiso(estado.usuario.rol, seccion)) {
     notificar('No tenés permisos para acceder a esta sección.', 'error');
@@ -84,47 +82,34 @@ function navegarA(seccion) {
 window.addEventListener('hashchange', () => {
   const seccion = window.location.hash.replace('#', '');
 
-  // Si no hay sección o no hay sesión activa, frena y manda a la pantalla de inicio
   if (!seccion || !estado.usuario) {
     mostrarPantallaInicio();
     return;
   }
 
-  // Verificación estricta de seguridad en el cambio de URL manual
   if (!tienePermiso(estado.usuario.rol, seccion)) {
     notificar('Acceso denegado a esa URL.', 'error');
     window.location.hash = 'dashboard';
     return;
   }
 
-  // DICCIONARIO COMPLETO DE SECCIONES / PÁGINAS DEL HOSPITAL
   const rutas = {
-    // Pantalla compartida
     dashboard: renderDashboard,
-    
-    // URLs del PACIENTE
     nuevo_turno: renderNuevoTurno,
     mis_turnos: renderMisTurnos,
     historial: renderHistorial,
-    
-    // URLs del MÉDICO
     mi_agenda_doc: renderMiAgendaDoctor,
-    atencion: () => renderAtencionTurno(null), // Vista para registrar diagnóstico e inasistencias
-    
-    // URLs del RECEPCIONISTA
-    gestion_medicos:   renderGestionMedicos,   // Gestión de Médicos (Recep + Admin)
-    gestion_pacientes: renderGestionPacientes, // Gestión de Pacientes (Recep)
-    
-    // URLs del ADMINISTRADOR
-    usuarios: renderUsuarios,          // Directorio completo de usuarios
-    gestionar_esp: renderEspecialidades, // Gestión de Especialidades
-    agenda: renderAgenda,              // Horarios de Atención Generales
-    todos_turnos: renderMisTurnos,     // Supervisar Turnos del hospital
-    pagos: renderPagos,                // Control de Pagos de consultas
-    suspensiones: renderSuspensiones   // Control de Inasistencias y Límites
+    atencion: () => renderAtencionTurno(null),
+    gestion_medicos:   renderGestionMedicos,
+    gestion_pacientes: renderGestionPacientes,
+    usuarios: renderGestionMedicos,
+    gestionar_esp: renderEspecialidades,
+    agenda: renderAgenda,
+    todos_turnos: renderMisTurnos,
+    pagos: renderPagos,
+    suspensiones: renderSuspensiones
   };
   
-  // Si la ruta copiada en la URL es válida, la ejecuta; si no, va al dashboard base
   if (rutas[seccion]) {
     rutas[seccion](seccion);
   } else {
@@ -137,3 +122,39 @@ if (window.location.hash !== '') {
 } else {
     mostrarPantallaInicio();
 }
+
+// Crear usuario genérico (admin u otro rol sin perfil extra)
+api.crearUsuarioGenerico = async (email, password, rol) => {
+    const { error } = await clienteSupabase
+        .from('usuarios')
+        .insert([{ email, contrasenia: password, rol }]);
+    if (error) {
+        if (error.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
+        return { success: false, error: error.message };
+    }
+    return { success: true };
+};
+
+// Actualizar email y/o contraseña de cualquier usuario
+api.actualizarUsuarioGenerico = async (idUsuario, datos) => {
+    const campos = {};
+    if (datos.email) campos.email = datos.email;
+    if (datos.password) campos.contrasenia = datos.password;
+    if (datos.rol) campos.rol = datos.rol;
+    const { error } = await clienteSupabase
+        .from('usuarios')
+        .update(campos)
+        .eq('id_usuario', idUsuario);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+};
+
+// Eliminar cualquier usuario (y sus perfiles relacionados por CASCADE)
+api.eliminarUsuarioGenerico = async (idUsuario) => {
+    const { error } = await clienteSupabase
+        .from('usuarios')
+        .delete()
+        .eq('id_usuario', idUsuario);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+};

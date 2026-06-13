@@ -1,4 +1,50 @@
-// --- Controladores Especialidades ---
+// --- Controladores Usuarios del Sistema ---
+
+function abrirFormEditarUsuario(id) {
+  const usr = estado.usuarios.find(u => u.id === id);
+  if (!usr) return;
+  document.getElementById('usr-sys-titulo').innerText = '✏️ Editando: ' + usr.nombreCompleto;
+  document.getElementById('usr-sys-id').value    = usr.id;
+  document.getElementById('usr-sys-email').value = usr.username;
+  document.getElementById('usr-sys-rol').value   = usr.rol === 'DOCTOR' ? 'medico' : usr.rol.toLowerCase();
+  document.getElementById('usr-sys-pass').value  = '';
+}
+
+async function guardarUsuarioSistema() {
+  const id       = document.getElementById('usr-sys-id').value;
+  const email    = document.getElementById('usr-sys-email').value.trim();
+  const rol      = document.getElementById('usr-sys-rol').value;
+  const password = document.getElementById('usr-sys-pass').value;
+
+  if (!email || !rol) { notificar('Completá email y rol.', 'error'); return; }
+
+  if (id) {
+    const datos = { email, rol };
+    if (password) datos.password = password;
+    const r = await api.actualizarUsuarioGenerico(id, datos);
+    if (!r.success) { notificar('❌ ' + r.error, 'error'); return; }
+    notificar('✅ Usuario actualizado.');
+  } else {
+    if (!password || password.length < 4) { notificar('Ingresá una contraseña de al menos 4 caracteres.', 'error'); return; }
+    const r = await api.crearUsuarioGenerico(email, password, rol);
+    if (!r.success) { notificar('❌ ' + r.error, 'error'); return; }
+    notificar('✅ Usuario creado.');
+  }
+
+  const res = await api.getUsuarios();
+  if (res.success) estado.usuarios = res.data;
+  renderUsuarios();
+}
+
+async function eliminarUsuarioSistema(id, nombre) {
+  if (!confirm(`¿Eliminar al usuario ${nombre}? Esta acción no se puede deshacer.`)) return;
+  const r = await api.eliminarUsuarioGenerico(id);
+  if (!r.success) { notificar('❌ ' + r.error, 'error'); return; }
+  notificar('🗑️ Usuario eliminado.');
+  const res = await api.getUsuarios();
+  if (res.success) estado.usuarios = res.data;
+  renderUsuarios();
+}
 
 async function guardarNuevaEspecialidad() {
   const nombre = document.getElementById('esp-nombre').value.trim();
