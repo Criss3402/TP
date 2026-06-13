@@ -60,3 +60,12 @@ async function confirmarTurno() {
     notificar('❌ Error: ' + respuesta.error, 'error');
   }
 }
+async function cancelarTurnoPaciente(id) {
+  if (!confirm('¿Cancelar este turno?')) return;
+  const respuesta = await api.cambiarEstado(id, 'Cancelado');
+  if (!respuesta.success) { notificar('❌ ' + respuesta.error, 'error'); return; }
+  notificar('✅ Turno cancelado.');
+  const resTurnos = await api.getTurnos();
+  if (resTurnos.success) estado.turnos = resTurnos.data;
+  renderMisTurnos();
+}
