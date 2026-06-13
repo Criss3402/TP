@@ -102,7 +102,7 @@ window.addEventListener('hashchange', () => {
     atencion: () => renderAtencionTurno(null),
     gestion_medicos:   renderGestionMedicos,
     gestion_pacientes: renderGestionPacientes,
-    usuarios: renderGestionMedicos,
+    usuarios: renderUsuarios,
     gestionar_esp: renderEspecialidades,
     agenda: renderAgenda,
     todos_turnos: renderMisTurnos,
