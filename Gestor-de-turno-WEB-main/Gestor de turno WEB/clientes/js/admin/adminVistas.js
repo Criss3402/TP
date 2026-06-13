@@ -41,6 +41,18 @@ function renderUsuarios() {
               ${opcionesEsp}
             </select>
           </div>
+          <div class="field" style="flex: 1; min-width: 120px; margin-bottom: 0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size: 13px;">DNI</label>
+            <input id="usr-dni" class="input" style="border: 1px solid ${COLOR_MINT.mintLight}; background: white; color: #333;" placeholder="Ej: 30123456" />
+          </div>
+          <div class="field" style="flex: 1; min-width: 120px; margin-bottom: 0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size: 13px;">Teléfono</label>
+            <input id="usr-tel" class="input" style="border: 1px solid ${COLOR_MINT.mintLight}; background: white; color: #333;" placeholder="Ej: 3777-123456" />
+          </div>
+          <div class="field" style="flex: 1; min-width: 120px; margin-bottom: 0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size: 13px;">Matrícula</label>
+            <input id="usr-matricula" class="input" style="border: 1px solid ${COLOR_MINT.mintLight}; background: white; color: #333;" placeholder="Ej: MP-1234" />
+          </div>
           <button class="btn btn-primary" style="height: 40px; background-color: ${COLOR_MINT.vibrantMint}; border-color: ${COLOR_MINT.vibrantMint}; font-weight:700; padding: 0 20px;" onclick="guardarEspecialista()">Guardar</button>
           <button class="btn btn-ghost" style="height: 40px; border: 1px solid ${COLOR_MINT.mintLight}; color: ${COLOR_MINT.emeraldDark}; font-weight:600; padding: 0 20px;" onclick="renderUsuarios()">Cancelar</button>
         </div>

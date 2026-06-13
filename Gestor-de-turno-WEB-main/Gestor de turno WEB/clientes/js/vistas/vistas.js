@@ -190,14 +190,70 @@ function mostrarLoginPaciente(errorMsg = '') {
             <h2 class="text-emerald-main" style="font-size: 24px; margin: 0;">Portal Pacientes</h2>
         </div>
         <div>
-          <div class="field"><label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Usuario o DNI</label><input id="login-user" class="input mint-input" placeholder="Ingrese su usuario" onkeydown="if(event.key==='Enter') ejecutarLogin('PACIENTE')" /></div>
+          <div class="field"><label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Correo Electronico</label><input id="login-user" class="input mint-input" placeholder="Ej: paciente@correo.com" onkeydown="if(event.key==='Enter') ejecutarLogin('PACIENTE')" /></div>
           <div class="field" style="margin-top:15px;"><label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Contraseña</label><input id="login-pass" class="input mint-input" type="password" placeholder="Ingrese su clave" onkeydown="if(event.key==='Enter') ejecutarLogin('PACIENTE')" /></div>
           ${errorMsg ? `<p style="color:#dc2626; font-size:13px; margin: 10px 0 0 0;">${errorMsg}</p>` : ''}
           <div style="margin: 20px 0 15px 0;">
             <button class="btn-mint-submit" onclick="ejecutarLogin('PACIENTE')">Iniciar Sesión</button>
           </div>
-          <div style="text-align: center; margin-top: 15px;">
+          <div style="display:flex; justify-content:center; gap:20px; margin-top: 15px;">
             <span class="water-link">¿Olvidó su contraseña?</span>
+            <span class="water-link" onclick="mostrarRegistroPaciente()">Crear cuenta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+function mostrarRegistroPaciente(errorMsg = '') {
+  renderizar(`
+    ${estilosLoginComunes}
+    <div class="auth-background">
+      <div class="glass-box" style="max-width: 480px;">
+        <span class="water-link" onclick="mostrarLoginPaciente()" style="display:inline-block; margin-bottom:20px;">Volver al login</span>
+        <div style="text-align:center; margin-bottom:25px;">
+            <h2 class="text-emerald-main" style="font-size: 24px; margin: 0;">Crear Cuenta</h2>
+            <p style="color: ${COLOR_MINT.lightGray}; font-size: 13px; margin-top: 8px; margin-bottom: 0;">Completá tus datos para registrarte como paciente</p>
+        </div>
+        <div>
+          <div style="display:flex; gap:12px;">
+            <div class="field" style="flex:1; margin-bottom:0;">
+              <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Nombre</label>
+              <input id="reg-nombre" class="input mint-input" placeholder="Ej: Juan" />
+            </div>
+            <div class="field" style="flex:1; margin-bottom:0;">
+              <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Apellido</label>
+              <input id="reg-apellido" class="input mint-input" placeholder="Ej: Pérez" />
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <div class="field" style="flex:1; margin-bottom:0;">
+              <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">DNI</label>
+              <input id="reg-dni" class="input mint-input" placeholder="Ej: 30123456" />
+            </div>
+            <div class="field" style="flex:1; margin-bottom:0;">
+              <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Teléfono <span style="font-weight:400; color:${COLOR_MINT.lightGray};">(opcional)</span></label>
+              <input id="reg-tel" class="input mint-input" placeholder="Ej: 3777-123456" />
+            </div>
+          </div>
+          <div class="field" style="margin-top:12px; margin-bottom:0;">
+            <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Correo Electrónico</label>
+            <input id="reg-email" class="input mint-input" placeholder="Ej: juan@correo.com" />
+          </div>
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <div class="field" style="flex:1; margin-bottom:0;">
+              <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Contraseña</label>
+              <input id="reg-pass" class="input mint-input" type="password" placeholder="Mínimo 4 caracteres" />
+            </div>
+            <div class="field" style="flex:1; margin-bottom:0;">
+              <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Confirmar contraseña</label>
+              <input id="reg-pass2" class="input mint-input" type="password" placeholder="Repetí tu clave" />
+            </div>
+          </div>
+          ${errorMsg ? `<p style="color:#dc2626; font-size:13px; margin: 10px 0 0 0;">${errorMsg}</p>` : ''}
+          <div style="margin: 20px 0 0 0;">
+            <button class="btn-mint-submit" onclick="ejecutarRegistroPaciente()">Registrarme</button>
           </div>
         </div>
       </div>
@@ -215,7 +271,7 @@ function mostrarLoginPersonal(errorMsg = '') {
             <h2 class="text-emerald-main" style="font-size: 24px; margin: 0;">Acceso Institucional</h2>
         </div>
         <div>
-          <div class="field"><label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Usuario Corporativo</label><input id="login-user" class="input mint-input" placeholder="Ej: médico o administrador" onkeydown="if(event.key==='Enter') ejecutarLogin('PERSONAL')" /></div>
+          <div class="field"><label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Correo Institucional</label><input id="login-user" class="input mint-input" placeholder="Ej: doctor@saludgoya.com" onkeydown="if(event.key==='Enter') ejecutarLogin('PERSONAL')" /></div>
           <div class="field" style="margin-top:15px;"><label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Clave de Seguridad</label><input id="login-pass" class="input mint-input" type="password" placeholder="Ingrese su clave" onkeydown="if(event.key==='Enter') ejecutarLogin('PERSONAL')" /></div>
           ${errorMsg ? `<p style="color:#dc2626; font-size:13px; margin: 10px 0 0 0;">${errorMsg}</p>` : ''}
           <div style="margin: 20px 0 15px 0;">
@@ -228,7 +284,7 @@ function mostrarLoginPersonal(errorMsg = '') {
 }
 
 function badgeEstado(estadoStr) {
-  const config = { PENDIENTE: { color: '#f4a261', label: 'Pendiente' }, EN_CURSO: { color: '#4cc9f0', label: 'En curso' }, COMPLETADO: { color: '#2a9d8f', label: 'Completado' }, CANCELADO: { color: '#e63946', label: 'Cancelado' }, AUSENTE: { color: '#e63946', label: 'Ausente' } };
+  const config = { Solicitado: { color: '#f4a261', label: 'Solicitado' }, Confirmado: { color: '#4cc9f0', label: 'Confirmado' }, Atendido: { color: '#2a9d8f', label: 'Atendido' }, Cancelado: { color: '#e63946', label: 'Cancelado' }, Ausente: { color: '#e63946', label: 'Ausente' } };
   const c = config[estadoStr] || { color: '#888', label: estadoStr };
   return `<span class="badge" style="background:${c.color}22;color:${c.color}">${c.label}</span>`;
 }
@@ -276,8 +332,8 @@ function htmlSidebar(seccionActiva) {
 function renderDashboard() {
   const { usuario, turnos, especialidades } = estado;
   const turnosPermitidos = filtrarTurnosPorRol(turnos, usuario);
-  const totalPendientes = turnosPermitidos.filter(t => t.estado === 'PENDIENTE').length;
-  const totalCompletados = turnosPermitidos.filter(t => t.estado === 'COMPLETADO').length;
+  const totalPendientes = turnosPermitidos.filter(t => t.estado === 'Solicitado').length;
+  const totalCompletados = turnosPermitidos.filter(t => t.estado === 'Atendido').length;
 
   let htmlEspecialidades = '';
   if (usuario.rol !== 'PACIENTE') {
@@ -315,14 +371,17 @@ function renderMisTurnos() {
       const nombreColumnaExtra = usuario.rol === 'PACIENTE' ? t.doctorNombre : t.pacienteNombre;
       return `
         <tr>
-          <td><strong>${t.codigoTurno}</strong></td>
+          <td><strong>T-${String(t.id).padStart(4, '0')}</strong></td>
           <td>${t.fecha} | ${t.hora} hs</td>
           <td>${esp ? esp.nombre : '—'}</td>
           <td>${nombreColumnaExtra}</td>
           <td>${badgeEstado(t.estado)}</td>
           <td style="text-align:center;">
-            ${usuario.rol === 'DOCTOR' && t.estado === 'PENDIENTE' 
-              ? `<button class="btn btn-primary" style="font-size:12px; padding:4px 8px; background-color:${COLOR_MINT.vibrantMint}; border-color:${COLOR_MINT.vibrantMint};" onclick="notificar('Atención registrada'); navegarA('dashboard')">Atender</button>` 
+            ${usuario.rol === 'DOCTOR' && (t.estado === 'Solicitado' || t.estado === 'Confirmado')
+              ? `<div style="display:flex; gap:6px; justify-content:center;">
+                  <button class="btn btn-primary" style="font-size:12px; padding:4px 8px; background-color:${COLOR_MINT.vibrantMint}; border-color:${COLOR_MINT.vibrantMint};" onclick="cambiarEstadoTurno(${t.id}, 'Atendido')">Atender</button>
+                  <button class="btn" style="font-size:12px; padding:4px 8px; background-color:#e63946; border:1px solid #e63946; color:white; border-radius:4px; cursor:pointer; font-weight:600;" onclick="cambiarEstadoTurno(${t.id}, 'Cancelado')">Cancelar</button>
+                </div>`
               : `<span style="color:${COLOR_MINT.lightGray}; font-size:12px;">Sin acciones</span>`}
           </td>
         </tr>

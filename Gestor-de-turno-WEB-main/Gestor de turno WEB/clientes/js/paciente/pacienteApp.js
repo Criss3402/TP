@@ -30,23 +30,33 @@ function cambiarMesTurnosPaciente(offset) {
   renderNuevoTurno();
 }
 
-function confirmarTurno() {
-  const datos = estado.nuevoTurno;
-  const doctorAsignado = estado.usuarios.find(u => u.id == datos.doctorId);
-  
-  const nuevo = {
-    id: Date.now(),
-    codigoTurno: 'T-' + Math.floor(Math.random() * 1000),
-    especialidadId: datos.especialidadId,
-    fecha: datos.fecha,
-    hora: datos.hora,
-    estado: 'PENDIENTE',
-    pacienteNombre: estado.usuario.nombreCompleto,
-    doctorNombre: doctorAsignado ? doctorAsignado.nombreCompleto : 'Asignado'
+async function confirmarTurno() {
+  // 1. Armamos el "paquete" con los datos exactos que pide tu API
+  const paqueteTurno = {
+    idPaciente: estado.usuario.id,
+    idMedico: estado.nuevoTurno.doctorId,
+    fecha: estado.nuevoTurno.fecha,
+    hora: estado.nuevoTurno.hora
   };
 
-  estado.turnos.push(nuevo);
-  notificar('✅ Turno solicitado con éxito.');
-  estado.nuevoTurno = { paso: 1, especialidadId: null, doctorId: null, fecha: '', hora: '' };
-  navegarA('mis_turnos');
+  // 2. Mandamos el paquete a Supabase y esperamos (await) su respuesta
+  const respuesta = await api.crearTurno(paqueteTurno);
+
+  // 3. Evaluamos qué nos respondió la base de datos
+  if (respuesta.success) {
+    notificar('✅ Turno solicitado con éxito en la nube.');
+    
+    // 4. Si se guardó, descargamos la lista de turnos fresca para que aparezca
+    const resTurnos = await api.getTurnos();
+    if (resTurnos.success) {
+        estado.turnos = resTurnos.data;
+    }
+
+    // 5. Limpiamos la memoria temporal y lo mandamos a su panel de turnos
+    estado.nuevoTurno = { paso: 1, especialidadId: null, doctorId: null, fecha: '', hora: '' };
+    navegarA('mis_turnos');
+    
+  } else {
+    notificar('❌ Error: ' + respuesta.error, 'error');
+  }
 }

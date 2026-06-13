@@ -37,6 +37,38 @@ async function ejecutarLogin(tipoPortal) {
   }
 }
 
+async function ejecutarRegistroPaciente() {
+  const nombre    = document.getElementById('reg-nombre').value.trim();
+  const apellido  = document.getElementById('reg-apellido').value.trim();
+  const dni       = document.getElementById('reg-dni').value.trim();
+  const telefono  = document.getElementById('reg-tel').value.trim();
+  const email     = document.getElementById('reg-email').value.trim();
+  const password  = document.getElementById('reg-pass').value;
+  const password2 = document.getElementById('reg-pass2').value;
+
+  if (!nombre || !apellido || !dni || !email || !password) {
+    mostrarRegistroPaciente('Completá todos los campos obligatorios.');
+    return;
+  }
+  if (password.length < 4) {
+    mostrarRegistroPaciente('La contraseña debe tener al menos 4 caracteres.');
+    return;
+  }
+  if (password !== password2) {
+    mostrarRegistroPaciente('Las contraseñas no coinciden.');
+    return;
+  }
+
+  try {
+    const res = await api.crearPaciente({ nombre, apellido, dni, telefono, email, password });
+    if (!res.success) { mostrarRegistroPaciente(res.error); return; }
+    notificar('✅ Cuenta creada. Ya podés iniciar sesión.');
+    mostrarLoginPaciente();
+  } catch (err) {
+    mostrarRegistroPaciente('Error al conectar con el servidor.');
+  }
+}
+
 async function cerrarSesion() {
   estado.token = null;
   estado.usuario = null;
@@ -45,15 +77,17 @@ async function cerrarSesion() {
 }
 
 async function cargarDatosIniciales() {
-  // Simulación o carga real de todas las colecciones necesarias en memoria
-  const [resEsp, resTurnos, resUsr] = await Promise.all([
-    api.getEspecialidades(), 
-    api.getTurnos(), 
-    api.getUsuarios()
+  // Carga real de todas las colecciones necesarias en memoria
+  const [resEsp, resTurnos, resUsr, resAgendas] = await Promise.all([
+    api.getEspecialidades(),
+    api.getTurnos(),
+    api.getUsuarios(),
+    api.getAgendas()
   ]);
-  if (resEsp.success) estado.especialidades = resEsp.data;
-  if (resTurnos.success) estado.turnos = resTurnos.data;
-  if (resUsr.success) estado.usuarios = resUsr.data;
+  if (resEsp.success)     estado.especialidades = resEsp.data;
+  if (resTurnos.success)  estado.turnos         = resTurnos.data;
+  if (resUsr.success)     estado.usuarios       = resUsr.data;
+  if (resAgendas.success) estado.agendas        = resAgendas.data;
 }
 
 // La función navegarA ahora solo se encarga de cambiar la URL en el navegador
