@@ -376,7 +376,8 @@ function renderMisTurnos() {
           <td style="text-align:center;">
             ${usuario.rol === 'DOCTOR' && (t.estado === 'Solicitado' || t.estado === 'Confirmado')
   ? `<div style="display:flex; gap:6px; justify-content:center;">
-      <button class="btn btn-primary" style="font-size:12px; padding:4px 8px; background-color:${COLOR_MINT.vibrantMint}; border-color:${COLOR_MINT.vibrantMint};" onclick="cambiarEstadoTurno(${t.id}, 'Atendido')">Atender</button>
+      <button class="btn btn-primary" style="font-size:12px; padding:4px 8px; background-color:${COLOR_MINT.vibrantMint}; border-color:${COLOR_MINT.vibrantMint};" onclick="abrirAtencionTurno(${t.id})">Atender</button>
+      <button class="btn" style="font-size:12px; padding:4px 8px; background-color:#f59e0b; border:1px solid #f59e0b; color:white; border-radius:4px; cursor:pointer; font-weight:600;" onclick="cambiarEstadoTurno(${t.id}, 'Ausente')">Ausente</button>
       <button class="btn" style="font-size:12px; padding:4px 8px; background-color:#e63946; border:1px solid #e63946; color:white; border-radius:4px; cursor:pointer; font-weight:600;" onclick="cambiarEstadoTurno(${t.id}, 'Cancelado')">Cancelar</button>
     </div>`
   : usuario.rol === 'PACIENTE' && (t.estado === 'Solicitado' || t.estado === 'Confirmado')

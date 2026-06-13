@@ -206,13 +206,15 @@ const api = {
     }
     return { success: true };
   },
-
-  cambiarEstado: async (idTurno, nuevoEstado) => {
+cambiarEstado: async (idTurno, nuevoEstado, diagnostico = null, indicaciones = null) => {
+    const campos = { estado: nuevoEstado };
+    if (diagnostico)  campos.diagnostico  = diagnostico;
+    if (indicaciones) campos.indicaciones = indicaciones;
     const { error } = await clienteSupabase
       .from('turnos')
-      .update({ estado: nuevoEstado })
+      .update(campos)
       .eq('id_turno', idTurno);
-
+      
     if (error) {
       console.error('Error al actualizar:', error);
       return { success: false, error: 'No se pudo cambiar el estado.' };
