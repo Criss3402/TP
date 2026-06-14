@@ -108,7 +108,8 @@ window.addEventListener('hashchange', () => {
     todos_turnos: renderMisTurnos,
     pagos: renderPagos,
     suspensiones: renderSuspensiones,
-    historial_admin: renderHistorialAdmin
+    historial_admin: renderHistorialAdmin,
+    estadisticas: renderEstadisticas
   };
   
   if (rutas[seccion]) {

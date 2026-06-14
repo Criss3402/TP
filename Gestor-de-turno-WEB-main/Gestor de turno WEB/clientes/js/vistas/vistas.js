@@ -291,15 +291,16 @@ function htmlSidebar(seccionActiva) {
     { id: 'agenda',            label: '📆 Horarios de Atención' }
   ];
   const itemsAdmin = [
-    { id: 'usuarios',         label: '👥 Usuarios del Sistema' },
-    { id: 'gestion_medicos',  label: '👨‍⚕️ Gestión de Médicos' },
-    { id: 'gestion_pacientes',label: '🏥 Gestión de Pacientes' },
-    { id: 'todos_turnos',     label: '📋 Supervisar Turnos' },
-    { id: 'gestionar_esp',    label: '🩺 Especialidades' },
-    { id: 'agenda',           label: '📆 Horarios Generales' },
-    { id: 'pagos',            label: '💳 Gestión de Pagos' },
-    { id: 'suspensiones',     label: '🚫 Suspensiones' },
-    { id: 'historial_admin', label: '📁 Historiales Médicos' }
+    { id: 'usuarios',          label: '👥 Usuarios del Sistema' },
+    { id: 'gestion_medicos',   label: '👨‍⚕️ Gestión de Médicos' },
+    { id: 'gestion_pacientes', label: '🏥 Gestión de Pacientes' },
+    { id: 'todos_turnos',      label: '📋 Supervisar Turnos' },
+    { id: 'gestionar_esp',     label: '🩺 Especialidades' },
+    { id: 'agenda',            label: '📆 Horarios Generales' },
+    { id: 'pagos',             label: '💳 Gestión de Pagos' },
+    { id: 'suspensiones',      label: '🚫 Suspensiones' },
+    { id: 'historial_admin',   label: '📁 Historiales Médicos' },
+    { id: 'estadisticas',      label: '📊 Estadísticas' }
 ];
 
   let items = [...itemsComunes];

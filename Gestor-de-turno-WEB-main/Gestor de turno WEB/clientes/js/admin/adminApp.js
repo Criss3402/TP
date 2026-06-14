@@ -377,3 +377,163 @@ function buscarHistorialPaciente() {
     </div>
   `;
 }
+
+function calcularEstadisticas(todo = false) {
+  const desde = document.getElementById('est-desde').value;
+  const hasta = document.getElementById('est-hasta').value;
+
+  if (!todo && (!desde || !hasta)) {
+    notificar('Seleccioná un rango de fechas o hacé click en "Ver Todo".', 'error');
+    return;
+  }
+
+  let turnos = estado.turnos;
+  if (!todo && desde && hasta) {
+    turnos = turnos.filter(t => t.fecha >= desde && t.fecha <= hasta);
+  }
+
+  const totalTurnos     = turnos.length;
+  const totalPacientes  = new Set(turnos.map(t => t.pacienteNombre)).size;
+  const totalMedicos    = estado.usuarios.filter(u => u.rol === 'DOCTOR').length;
+
+  // Conteo por estado
+  const porEstado = {
+    Solicitado: turnos.filter(t => t.estado === 'Solicitado').length,
+    Confirmado: turnos.filter(t => t.estado === 'Confirmado').length,
+    Atendido:   turnos.filter(t => t.estado === 'Atendido').length,
+    Cancelado:  turnos.filter(t => t.estado === 'Cancelado').length,
+    Ausente:    turnos.filter(t => t.estado === 'Ausente').length,
+  };
+
+  // Especialidad más demandada
+  const porEsp = {};
+  turnos.forEach(t => {
+    const esp = estado.especialidades.find(e => e.id == t.especialidadId);
+    const nombre = esp ? esp.nombre : 'Sin especialidad';
+    porEsp[nombre] = (porEsp[nombre] || 0) + 1;
+  });
+  const espMasDemandada = Object.entries(porEsp).sort((a,b) => b[1]-a[1])[0];
+
+  // Ranking médicos por atendidos
+  const porMedico = {};
+  turnos.filter(t => t.estado === 'Atendido').forEach(t => {
+    porMedico[t.doctorNombre] = (porMedico[t.doctorNombre] || 0) + 1;
+  });
+  const rankingMedicos = Object.entries(porMedico).sort((a,b) => b[1]-a[1]);
+
+  // Ranking especialidades
+  const rankingEsp = Object.entries(porEsp).sort((a,b) => b[1]-a[1]);
+
+  // Colores torta
+  const coloresTorta = {
+    Solicitado: '#f59e0b',
+    Confirmado: '#3b82f6',
+    Atendido:   '#10b981',
+    Cancelado:  '#e63946',
+    Ausente:    '#8b5cf6'
+  };
+
+  // Generar segmentos SVG torta
+  const total = Object.values(porEstado).reduce((a,b) => a+b, 0);
+  let svgTorta = '';
+  if (total > 0) {
+    let startAngle = 0;
+    const cx = 120, cy = 120, r = 100;
+    Object.entries(porEstado).forEach(([estado, count]) => {
+      if (count === 0) return;
+      const angle = (count / total) * 360;
+      const endAngle = startAngle + angle;
+      const x1 = cx + r * Math.cos((startAngle - 90) * Math.PI / 180);
+      const y1 = cy + r * Math.sin((startAngle - 90) * Math.PI / 180);
+      const x2 = cx + r * Math.cos((endAngle - 90) * Math.PI / 180);
+      const y2 = cy + r * Math.sin((endAngle - 90) * Math.PI / 180);
+      const largeArc = angle > 180 ? 1 : 0;
+      svgTorta += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z" fill="${coloresTorta[estado]}" stroke="white" stroke-width="2"/>`;
+      startAngle = endAngle;
+    });
+  } else {
+    svgTorta = `<circle cx="120" cy="120" r="100" fill="#e5e7eb"/>`;
+  }
+
+  const leyendaTorta = Object.entries(porEstado).map(([est, count]) => `
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <div style="width:14px; height:14px; border-radius:3px; background:${coloresTorta[est]};"></div>
+      <span style="font-size:13px; color:#333;">${est}: <strong>${count}</strong></span>
+    </div>
+  `).join('');
+
+  const filasRankingMedicos = rankingMedicos.length === 0
+    ? `<tr><td colspan="2" style="text-align:center; padding:20px; color:${COLOR_MINT.lightGray};">Sin datos</td></tr>`
+    : rankingMedicos.map(([nombre, cant], i) => `
+        <tr style="border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
+          <td style="padding:12px;">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`} ${nombre}</td>
+          <td style="padding:12px; text-align:right; font-weight:700; color:${COLOR_MINT.vibrantMint};">${cant} atendidos</td>
+        </tr>
+      `).join('');
+
+  const filasRankingEsp = rankingEsp.length === 0
+    ? `<tr><td colspan="2" style="text-align:center; padding:20px; color:${COLOR_MINT.lightGray};">Sin datos</td></tr>`
+    : rankingEsp.map(([nombre, cant]) => `
+        <tr style="border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
+          <td style="padding:12px;">${nombre}</td>
+          <td style="padding:12px; text-align:right; font-weight:700; color:${COLOR_MINT.emeraldDark};">${cant} turnos</td>
+        </tr>
+      `).join('');
+
+  document.getElementById('resultado-estadisticas').innerHTML = `
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
+      <div class="card" style="background:white; border-left:4px solid ${COLOR_MINT.vibrantMint}; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+        <div style="font-size:32px; font-weight:800; color:${COLOR_MINT.vibrantMint};">${totalTurnos}</div>
+        <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:4px;">📋 Total de Turnos</div>
+      </div>
+      <div class="card" style="background:white; border-left:4px solid ${COLOR_MINT.waterGreen}; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+        <div style="font-size:32px; font-weight:800; color:${COLOR_MINT.waterGreen};">${totalPacientes}</div>
+        <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:4px;">👥 Pacientes con Turnos</div>
+      </div>
+      <div class="card" style="background:white; border-left:4px solid ${COLOR_MINT.emeraldDark}; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+        <div style="font-size:32px; font-weight:800; color:${COLOR_MINT.emeraldDark};">${totalMedicos}</div>
+        <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:4px;">👨‍⚕️ Médicos Activos</div>
+      </div>
+      <div class="card" style="background:white; border-left:4px solid #f59e0b; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+        <div style="font-size:20px; font-weight:800; color:#f59e0b;">${espMasDemandada ? espMasDemandada[0] : '—'}</div>
+        <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:4px;">🏆 Especialidad más demandada</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
+      <div class="card" style="background:white; border:1px solid ${COLOR_MINT.mintLight}; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+        <h3 style="font-weight:700; color:${COLOR_MINT.emeraldDark}; margin-bottom:20px;">🥧 Distribución por Estado</h3>
+        <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+          <svg width="240" height="240" viewBox="0 0 240 240">${svgTorta}</svg>
+          <div>${leyendaTorta}</div>
+        </div>
+      </div>
+
+      <div class="card" style="background:white; border:1px solid ${COLOR_MINT.mintLight}; border-radius:8px; padding:0; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+        <div style="padding:16px 20px; border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
+          <h3 style="margin:0; font-weight:700; color:${COLOR_MINT.emeraldDark};">🏅 Ranking de Médicos</h3>
+        </div>
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr style="background:${COLOR_MINT.emeraldDark}; color:white; text-align:left;">
+            <th style="padding:12px;">Médico</th>
+            <th style="padding:12px; text-align:right;">Turnos Atendidos</th>
+          </tr></thead>
+          <tbody>${filasRankingMedicos}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="background:white; border:1px solid ${COLOR_MINT.mintLight}; border-radius:8px; padding:0; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+      <div style="padding:16px 20px; border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
+        <h3 style="margin:0; font-weight:700; color:${COLOR_MINT.emeraldDark};">🩺 Turnos por Especialidad</h3>
+      </div>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead><tr style="background:${COLOR_MINT.emeraldDark}; color:white; text-align:left;">
+          <th style="padding:12px;">Especialidad</th>
+          <th style="padding:12px; text-align:right;">Total Turnos</th>
+        </tr></thead>
+        <tbody>${filasRankingEsp}</tbody>
+      </table>
+    </div>
+  `;
+}
