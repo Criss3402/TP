@@ -74,3 +74,12 @@ async function cancelarTurnoPaciente(id) {
   if (resTurnos.success) estado.turnos = resTurnos.data;
   renderMisTurnos();
 }
+
+function filtrarEspecialidades(texto) {
+  const cards = document.querySelectorAll('#lista-especialidades .branch-card');
+  const filtro = texto.toLowerCase().trim();
+  cards.forEach(card => {
+    const nombre = card.dataset.nombre || '';
+    card.style.display = nombre.includes(filtro) ? '' : 'none';
+  });
+}

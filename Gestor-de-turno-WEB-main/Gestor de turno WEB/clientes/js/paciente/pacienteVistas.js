@@ -5,9 +5,18 @@ function renderNuevoTurno() {
   // 1. SELECCIÓN DE ESPECIALIDAD
   if (paso === 1) {
     contenido = `
-      <div class="grid-branches">
+      <div style="margin-bottom:20px;">
+        <input 
+          id="filtro-especialidad" 
+          class="input mint-input" 
+          placeholder="🔍 Buscar especialidad..." 
+          oninput="filtrarEspecialidades(this.value)"
+          style="max-width:400px; border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;"
+        />
+      </div>
+      <div class="grid-branches" id="lista-especialidades">
         ${estado.especialidades.map(e => `
-          <div class="branch-card" style="border-left:5px solid ${e.color}; background: white; border-top: 1px solid ${COLOR_MINT.mintLight}44; border-right: 1px solid ${COLOR_MINT.mintLight}44; border-bottom: 1px solid ${COLOR_MINT.mintLight}44;" onclick="seleccionarEspecialidad(${e.id})">
+          <div class="branch-card" data-nombre="${e.nombre.toLowerCase()}" style="border-left:5px solid ${e.color}; background: white; border-top: 1px solid ${COLOR_MINT.mintLight}44; border-right: 1px solid ${COLOR_MINT.mintLight}44; border-bottom: 1px solid ${COLOR_MINT.mintLight}44;" onclick="seleccionarEspecialidad(${e.id})">
             <div><div style="font-weight:700; color:${COLOR_MINT.emeraldDark}; font-size:16px;">${e.nombre}</div></div>
           </div>
         `).join('')}
