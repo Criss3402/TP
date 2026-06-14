@@ -1,4 +1,9 @@
-function seleccionarEspecialidad(id) {
+async function seleccionarEspecialidad(id) {
+  const resPac = await api.getPacientePorUsuario(estado.usuario.id);
+  if (resPac.success && resPac.data?.estado_suspension) {
+    notificar('⚠️ Tu cuenta está suspendida. No podés pedir turnos.', 'error');
+    return;
+  }
   estado.nuevoTurno.especialidadId = id;
   estado.nuevoTurno.doctorId = null; 
   estado.nuevoTurno.paso = 2; 

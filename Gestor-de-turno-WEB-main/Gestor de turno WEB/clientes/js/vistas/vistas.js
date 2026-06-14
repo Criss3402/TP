@@ -326,11 +326,24 @@ function htmlSidebar(seccionActiva) {
   `;
 }
 
-function renderDashboard() {
+async function renderDashboard() {
   const { usuario, turnos, especialidades } = estado;
   const turnosPermitidos = filtrarTurnosPorRol(turnos, usuario);
   const totalPendientes = turnosPermitidos.filter(t => t.estado === 'Solicitado').length;
   const totalCompletados = turnosPermitidos.filter(t => t.estado === 'Atendido').length;
+
+  let htmlSuspension = '';
+  if (usuario.rol === 'PACIENTE') {
+    const resPac = await api.getPacientePorUsuario(usuario.id);
+    if (resPac.success && resPac.data?.estado_suspension) {
+      htmlSuspension = `
+        <div style="background:#fef2f2; border:1px solid #fca5a5; border-left:4px solid #e63946; border-radius:8px; padding:20px; margin-bottom:24px;">
+          <h3 style="color:#dc2626; font-weight:700; margin:0 0 8px 0;">⚠️ Cuenta Suspendida</h3>
+          <p style="color:#7f1d1d; margin:0; font-size:14px;">${resPac.data.motivo_suspension || 'Tu cuenta fue suspendida.'} Por favor contactá al hospital para regularizar tu situación.</p>
+        </div>
+      `;
+    }
+  }
 
   let htmlEspecialidades = '';
   if (usuario.rol !== 'PACIENTE') {
@@ -346,6 +359,7 @@ function renderDashboard() {
   renderizar(`
     <div id="app-layout">${htmlSidebar('dashboard')}<div id="main-content" class="fade-in" style="background-color: ${COLOR_MINT.bgTint};">
       <h1 class="page-title" style="color: ${COLOR_MINT.emeraldDark};">Bienvenido, ${usuario.nombreCompleto.split(' ')[0]}</h1>
+      ${htmlSuspension}
       <div class="grid-stats" style="margin-bottom: 25px;">
         <div class="card" style="border-left:4px solid ${COLOR_MINT.waterGreen}; background: white;"><div style="font-size:28px; font-weight:800; color:${COLOR_MINT.waterGreen};">${totalPendientes}</div><div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:5px;">Turnos pendientes</div></div>
         <div class="card" style="border-left:4px solid ${COLOR_MINT.vibrantMint}; background: white;"><div style="font-size:28px; font-weight:800; color:${COLOR_MINT.vibrantMint};">${totalCompletados}</div><div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:5px;">Turnos Completados</div></div>

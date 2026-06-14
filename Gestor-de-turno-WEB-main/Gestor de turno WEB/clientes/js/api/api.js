@@ -384,3 +384,40 @@ api.crearRecepcionista = async (datos) => {
     }
     return { success: true };
 };
+api.registrarAusencia = async (idPaciente) => {
+    // Incrementar contador de ausencias
+    const { data, error: errorGet } = await clienteSupabase
+        .from('pacientes')
+        .select('cantidad_ausencias')
+        .eq('id_paciente', idPaciente)
+        .single();
+
+    if (errorGet) return { success: false, error: 'No se pudo obtener el paciente.' };
+
+    const nuevaCantidad = (data.cantidad_ausencias || 0) + 1;
+    const suspender = nuevaCantidad >= 3;
+
+    const campos = { cantidad_ausencias: nuevaCantidad };
+    if (suspender) {
+        campos.estado_suspension = true;
+        campos.motivo_suspension = `Suspendido automáticamente por ${nuevaCantidad} inasistencias.`;
+    }
+
+    const { error } = await clienteSupabase
+        .from('pacientes')
+        .update(campos)
+        .eq('id_paciente', idPaciente);
+
+    if (error) return { success: false, error: 'No se pudo registrar la ausencia.' };
+    return { success: true, suspendido: suspender, cantidad: nuevaCantidad };
+};
+
+api.getPacientePorUsuario = async (idUsuario) => {
+    const { data, error } = await clienteSupabase
+        .from('pacientes')
+        .select('*')
+        .eq('id_paciente', idUsuario)
+        .single();
+    if (error) return { success: false, data: null };
+    return { success: true, data };
+};

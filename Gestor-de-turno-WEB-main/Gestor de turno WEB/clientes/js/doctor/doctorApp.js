@@ -1,22 +1,41 @@
 async function cambiarEstadoTurno(id, est) { 
-  // 1. Mandamos la orden a la nube
+
   const respuesta = await api.cambiarEstado(id, est); 
-  
-  if(respuesta.success) {
-      notificar('✅ Turno actualizado a: ' + est); 
-      
-      // 2. Descargamos los datos frescos desde Supabase
-      const resTurnos = await api.getTurnos();
-      
-      // 3. Actualizamos la memoria de la página y redibujamos la tabla
-      if(resTurnos.success) {
-          estado.turnos = resTurnos.data;
-          renderMisTurnos(); 
+
+  if (respuesta.success) {
+    if (est === 'Ausente') {
+      const turno = estado.turnos.find(t => t.id === id);
+      if (turno) {
+        // Buscar el paciente por id directamente desde los turnos en Supabase
+        const { data: turnoData } = await clienteSupabase
+          .from('turnos')
+          .select('id_paciente')
+          .eq('id_turno', id)
+          .single();
+
+        if (turnoData?.id_paciente) {
+          const resAus = await api.registrarAusencia(turnoData.id_paciente);
+          if (resAus.suspendido) {
+            notificar(`⚠️ Paciente suspendido automáticamente por 3 inasistencias.`);
+          } else {
+            notificar(`✅ Ausencia registrada. Total: ${resAus.cantidad}/3`);
+          }
+        }
       }
+    } else {
+      notificar('✅ Turno actualizado a: ' + est);
+    }
+
+    const resTurnos = await api.getTurnos();
+    if (resTurnos.success) {
+      estado.turnos = resTurnos.data;
+      renderMisTurnos();
+    }
   } else {
-      notificar('❌ ' + respuesta.error, 'error');
+    notificar('❌ ' + respuesta.error, 'error');
   }
 }
+
 async function guardarAgendaDoctor() {
   const diaSemana = document.getElementById('doc-agenda-dia').value;
   const horaInicio = document.getElementById('doc-agenda-inicio').value;
