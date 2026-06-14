@@ -332,3 +332,48 @@ async function reactivarPaciente(idPaciente, nombre) {
   notificar(`✅ ${nombre} reactivado. Ausencias reiniciadas.`);
   renderGestionPacientes();
 }
+
+function buscarHistorialPaciente() {
+  const idUsuario = document.getElementById('hist-paciente').value;
+  if (!idUsuario) { notificar('Seleccioná un paciente.', 'error'); return; }
+
+  const paciente = estado.usuarios.find(u => u.id == idUsuario);
+  const nombrePaciente = paciente ? paciente.nombreCompleto : '';
+
+  const registros = estado.turnos.filter(t => 
+    t.pacienteNombre === nombrePaciente && t.estado === 'Atendido'
+  );
+
+  const filasHTML = registros.length === 0
+    ? `<tr><td colspan="4" style="text-align:center; padding:30px; color:${COLOR_MINT.lightGray};">Este paciente no tiene registros médicos aún.</td></tr>`
+    : registros.map(t => {
+        const esp = estado.especialidades.find(e => e.id == t.especialidadId);
+        return `
+          <tr style="border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
+            <td style="padding:14px 12px;"><strong>${t.fecha}</strong></td>
+            <td style="padding:14px 12px;">${esp ? esp.nombre : '—'}</td>
+            <td style="padding:14px 12px;">${t.doctorNombre}</td>
+            <td style="padding:14px 12px;">${t.diagnostico || 'Atención completada'}</td>
+          </tr>
+        `;
+      }).join('');
+
+  document.getElementById('resultado-historial').innerHTML = `
+    <div class="card" style="background:white; border:1px solid ${COLOR_MINT.mintLight}; border-top:4px solid ${COLOR_MINT.emeraldDark}; border-radius:8px; padding:0; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+      <div style="padding:16px 20px; border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
+        <h3 style="margin:0; color:${COLOR_MINT.emeraldDark}; font-weight:700;">📋 Historial de ${nombrePaciente}</h3>
+      </div>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="background-color:${COLOR_MINT.emeraldDark}; color:white; text-align:left;">
+            <th style="padding:14px 12px;">Fecha</th>
+            <th style="padding:14px 12px;">Especialidad</th>
+            <th style="padding:14px 12px;">Médico</th>
+            <th style="padding:14px 12px;">Diagnóstico</th>
+          </tr>
+        </thead>
+        <tbody>${filasHTML}</tbody>
+      </table>
+    </div>
+  `;
+}

@@ -298,7 +298,8 @@ function htmlSidebar(seccionActiva) {
     { id: 'gestionar_esp',    label: '🩺 Especialidades' },
     { id: 'agenda',           label: '📆 Horarios Generales' },
     { id: 'pagos',            label: '💳 Gestión de Pagos' },
-    { id: 'suspensiones',     label: '🚫 Suspensiones' }
+    { id: 'suspensiones',     label: '🚫 Suspensiones' },
+    { id: 'historial_admin', label: '📁 Historiales Médicos' }
 ];
 
   let items = [...itemsComunes];

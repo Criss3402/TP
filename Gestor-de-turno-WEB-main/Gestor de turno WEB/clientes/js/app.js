@@ -107,7 +107,8 @@ window.addEventListener('hashchange', () => {
     agenda: renderAgenda,
     todos_turnos: renderMisTurnos,
     pagos: renderPagos,
-    suspensiones: renderSuspensiones
+    suspensiones: renderSuspensiones,
+    historial_admin: renderHistorialAdmin
   };
   
   if (rutas[seccion]) {

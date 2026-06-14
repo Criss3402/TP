@@ -379,3 +379,29 @@ async function renderGestionPacientes() {
     </div></div>
   `);
 }
+async function renderHistorialAdmin() {
+  const res = await api.getPacientes();
+  const pacientes = res.success ? res.data : [];
+  const opsPacientes = pacientes.map(p => `<option value="${p.id}">${p.nombreCompleto} — ${p.email}</option>`).join('');
+
+  renderizar(`
+    <div id="app-layout">${htmlSidebar('historial_admin')}<div id="main-content" class="fade-in" style="background-color:${COLOR_MINT.bgTint}; min-height:100vh;">
+      <h1 class="page-title" style="color:${COLOR_MINT.emeraldDark};">📁 Historiales Médicos</h1>
+
+      <div class="card" style="background:white; border:1px solid ${COLOR_MINT.mintLight}; border-radius:8px; margin-bottom:24px; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+        <div style="display:flex; gap:14px; align-items:flex-end;">
+          <div class="field" style="flex:1; margin-bottom:0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size:13px;">Seleccioná un paciente</label>
+            <select id="hist-paciente" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333; width:100%;">
+              <option value="">— Seleccioná un paciente —</option>
+              ${opsPacientes}
+            </select>
+          </div>
+          <button class="btn btn-primary" style="height:40px; background-color:${COLOR_MINT.vibrantMint}; border-color:${COLOR_MINT.vibrantMint}; font-weight:700; padding:0 24px;" onclick="buscarHistorialPaciente()">Ver Historial</button>
+        </div>
+      </div>
+
+      <div id="resultado-historial"></div>
+    </div></div>
+  `);
+}

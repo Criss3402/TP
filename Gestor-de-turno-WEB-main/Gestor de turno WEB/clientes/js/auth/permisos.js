@@ -9,7 +9,7 @@ const ROLES = {
 };
 
 const PERMISOS_VISTAS = {
-    [ROLES.ADMIN]:          ['dashboard', 'usuarios', 'gestion_medicos', 'gestion_pacientes', 'todos_turnos', 'estadisticas', 'gestionar_esp', 'agenda', 'pagos', 'suspensiones'],
+   [ROLES.ADMIN]: ['dashboard', 'usuarios', 'gestion_medicos', 'gestion_pacientes', 'historial_admin', 'todos_turnos', 'estadisticas', 'gestionar_esp', 'agenda', 'pagos', 'suspensiones'],
     [ROLES.RECEPCIONISTA]:  ['dashboard', 'gestion_medicos', 'todos_turnos', 'gestion_pacientes', 'agenda'],
     [ROLES.DOCTOR]:         ['dashboard', 'mis_turnos', 'atencion', 'mi_agenda_doc'],
     [ROLES.PACIENTE]:       ['dashboard', 'mis_turnos', 'nuevo_turno', 'historial']
