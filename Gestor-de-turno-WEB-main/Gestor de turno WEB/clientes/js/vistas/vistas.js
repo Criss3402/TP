@@ -337,10 +337,32 @@ async function renderDashboard() {
   if (usuario.rol === 'PACIENTE') {
     const resPac = await api.getPacientePorUsuario(usuario.id);
     if (resPac.success && resPac.data?.estado_suspension) {
+      const ausencias = resPac.data.cantidad_ausencias || 0;
+      const motivo = resPac.data.motivo_suspension || 'Tu cuenta fue suspendida.';
       htmlSuspension = `
-        <div style="background:#fef2f2; border:1px solid #fca5a5; border-left:4px solid #e63946; border-radius:8px; padding:20px; margin-bottom:24px;">
-          <h3 style="color:#dc2626; font-weight:700; margin:0 0 8px 0;">⚠️ Cuenta Suspendida</h3>
-          <p style="color:#7f1d1d; margin:0; font-size:14px;">${resPac.data.motivo_suspension || 'Tu cuenta fue suspendida.'} Por favor contactá al hospital para regularizar tu situación.</p>
+        <div style="background:#fef2f2; border:1px solid #fca5a5; border-left:4px solid #e63946; border-radius:12px; padding:24px; margin-bottom:24px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <span style="font-size:32px;">🚫</span>
+            <div>
+              <h3 style="color:#dc2626; font-weight:700; margin:0; font-size:18px;">Cuenta Suspendida</h3>
+              <p style="color:#991b1b; margin:4px 0 0 0; font-size:13px;">Tu acceso está temporalmente restringido</p>
+            </div>
+          </div>
+          <div style="background:white; border-radius:8px; padding:16px; margin-bottom:16px; border:1px solid #fca5a5;">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; gap:8px;">
+                <span style="color:#dc2626; font-weight:700; font-size:13px; min-width:100px;">Motivo:</span>
+                <span style="color:#7f1d1d; font-size:13px;">${motivo}</span>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <span style="color:#dc2626; font-weight:700; font-size:13px; min-width:100px;">Inasistencias:</span>
+                <span style="color:#7f1d1d; font-size:13px;">${ausencias} de 3</span>
+              </div>
+            </div>
+          </div>
+          <div style="background:#fef9c3; border:1px solid #fde047; border-radius:8px; padding:12px;">
+            <p style="color:#713f12; margin:0; font-size:13px;">📞 Para regularizar tu situación, contactá al hospital. Tu cuenta será reactivada por un administrador.</p>
+          </div>
         </div>
       `;
     }
