@@ -80,14 +80,16 @@ const api = {
         const pac = extraerPerfil(t.pacientes);
 
         return {
-            id: t.id_turno,
-            fecha: t.fecha,
-            hora: t.hora,
-            estado: t.estado, 
-            doctorNombre: med ? `${med.nombre} ${med.apellido}`.trim() : 'Sin asignar',
-            pacienteNombre: pac ? `${pac.nombre} ${pac.apellido}`.trim() : 'Sin asignar',
-            especialidadId: med ? med.id_especialidad : null
-        };
+    id: t.id_turno,
+    fecha: t.fecha,
+    hora: t.hora,
+    estado: t.estado, 
+    doctorNombre: med ? `${med.nombre} ${med.apellido}`.trim() : 'Sin asignar',
+    pacienteNombre: pac ? `${pac.nombre} ${pac.apellido}`.trim() : 'Sin asignar',
+    especialidadId: med ? med.id_especialidad : null,
+    diagnostico: t.diagnostico || '',
+    indicaciones: t.indicaciones || ''
+};
     });
     return { success: true, data: turnosAdaptados };
   },
@@ -214,7 +216,7 @@ cambiarEstado: async (idTurno, nuevoEstado, diagnostico = null, indicaciones = n
       .from('turnos')
       .update(campos)
       .eq('id_turno', idTurno);
-      
+
     if (error) {
       console.error('Error al actualizar:', error);
       return { success: false, error: 'No se pudo cambiar el estado.' };
