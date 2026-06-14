@@ -291,14 +291,15 @@ function htmlSidebar(seccionActiva) {
     { id: 'agenda',            label: '📆 Horarios de Atención' }
   ];
   const itemsAdmin = [
-    { id: 'usuarios',      label: '👥 Usuarios del Sistema' },
-    { id: 'gestion_medicos', label: '👨‍⚕️ Gestión de Médicos' },
-    { id: 'todos_turnos',  label: '📋 Supervisar Turnos' },
-    { id: 'gestionar_esp', label: '🩺 Especialidades' },
-    { id: 'agenda',        label: '📆 Horarios Generales' },
-    { id: 'pagos',         label: '💳 Gestión de Pagos' },
-    { id: 'suspensiones',  label: '🚫 Suspensiones' }
-  ];
+    { id: 'usuarios',         label: '👥 Usuarios del Sistema' },
+    { id: 'gestion_medicos',  label: '👨‍⚕️ Gestión de Médicos' },
+    { id: 'gestion_pacientes',label: '🏥 Gestión de Pacientes' },
+    { id: 'todos_turnos',     label: '📋 Supervisar Turnos' },
+    { id: 'gestionar_esp',    label: '🩺 Especialidades' },
+    { id: 'agenda',           label: '📆 Horarios Generales' },
+    { id: 'pagos',            label: '💳 Gestión de Pagos' },
+    { id: 'suspensiones',     label: '🚫 Suspensiones' }
+];
 
   let items = [...itemsComunes];
   if (usuario.rol === 'PACIENTE')       items = [...items, ...itemsPaciente];

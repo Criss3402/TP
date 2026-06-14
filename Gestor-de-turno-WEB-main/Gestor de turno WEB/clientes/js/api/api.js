@@ -362,10 +362,14 @@ api.getPacientes = async () => {
             const pac = Array.isArray(u.pacientes) ? u.pacientes[0] : u.pacientes;
             return {
                 id: u.id_usuario,
+                idPaciente: pac?.id_paciente || null,
                 email: u.email,
                 nombreCompleto: pac ? `${pac.nombre} ${pac.apellido}`.trim() : u.email,
                 dni: pac?.dni || '—',
-                telefono: pac?.telefono || '—'
+                telefono: pac?.telefono || '—',
+                ausencias: pac?.cantidad_ausencias || 0,
+                suspendido: pac?.estado_suspension || false,
+                motivoSuspension: pac?.motivo_suspension || ''
             };
         })
     };
@@ -420,4 +424,22 @@ api.getPacientePorUsuario = async (idUsuario) => {
         .single();
     if (error) return { success: false, data: null };
     return { success: true, data };
+};
+
+api.suspenderPaciente = async (idPaciente, motivo) => {
+    const { error } = await clienteSupabase
+        .from('pacientes')
+        .update({ estado_suspension: true, motivo_suspension: motivo })
+        .eq('id_paciente', idPaciente);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+};
+
+api.reactivarPaciente = async (idPaciente) => {
+    const { error } = await clienteSupabase
+        .from('pacientes')
+        .update({ estado_suspension: false, motivo_suspension: null, cantidad_ausencias: 0 })
+        .eq('id_paciente', idPaciente);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
 };

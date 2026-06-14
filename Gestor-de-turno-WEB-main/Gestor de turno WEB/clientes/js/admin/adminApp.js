@@ -315,3 +315,20 @@ async function guardarRecepcionista() {
   if (datosNuevos.success) estado.usuarios = datosNuevos.data;
   renderGestionMedicos();
 }
+
+async function suspenderPacienteManual(idPaciente, nombre) {
+  const motivo = prompt(`¿Motivo de suspensión para ${nombre}?`);
+  if (!motivo) return;
+  const r = await api.suspenderPaciente(idPaciente, motivo);
+  if (!r.success) { notificar('❌ ' + r.error, 'error'); return; }
+  notificar(`🚫 ${nombre} suspendido.`);
+  renderGestionPacientes();
+}
+
+async function reactivarPaciente(idPaciente, nombre) {
+  if (!confirm(`¿Reactivar la cuenta de ${nombre}?`)) return;
+  const r = await api.reactivarPaciente(idPaciente);
+  if (!r.success) { notificar('❌ ' + r.error, 'error'); return; }
+  notificar(`✅ ${nombre} reactivado. Ausencias reiniciadas.`);
+  renderGestionPacientes();
+}

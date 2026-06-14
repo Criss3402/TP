@@ -331,18 +331,30 @@ async function renderGestionPacientes() {
   const pacientes = res.success ? res.data : [];
 
   let filasHTML = pacientes.length === 0
-    ? `<tr><td colspan="5" style="text-align:center; padding:30px; color:${COLOR_MINT.lightGray};">No hay pacientes registrados.</td></tr>`
-    : pacientes.map(p => `
-        <tr style="border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
-          <td style="padding:14px 12px; color:${COLOR_MINT.emeraldDark};"><strong>${p.nombreCompleto}</strong></td>
-          <td style="padding:14px 12px; color:${COLOR_MINT.lightGray};">${p.email}</td>
-          <td style="padding:14px 12px;">${p.dni}</td>
-          <td style="padding:14px 12px;">${p.telefono}</td>
-          <td style="padding:14px 12px; text-align:right;">
-            <button class="btn btn-ghost" style="border:1px solid ${COLOR_MINT.mintLight}; color:${COLOR_MINT.emeraldDark}; font-size:12px; padding:6px 12px; font-weight:600;" onclick="abrirTurnoParaPaciente(${p.id}, '${p.nombreCompleto}')">📅 Agendar Turno</button>
-          </td>
-        </tr>
-      `).join('');
+    ? `<tr><td colspan="6" style="text-align:center; padding:30px; color:${COLOR_MINT.lightGray};">No hay pacientes registrados.</td></tr>`
+    : pacientes.map(p => {
+        const badgeSuspension = p.suspendido
+          ? `<span style="background:#fef2f2; color:#dc2626; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; border:1px solid #fca5a5;">🚫 Suspendido</span>`
+          : `<span style="background:#f0fdf4; color:#16a34a; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; border:1px solid #86efac;">✅ Activo</span>`;
+        
+        const botonSuspension = p.suspendido
+          ? `<button class="btn" style="border:1px solid #16a34a; color:#16a34a; font-size:12px; padding:6px 12px; font-weight:600; background:transparent; border-radius:4px; cursor:pointer;" onclick="reactivarPaciente(${p.idPaciente}, '${p.nombreCompleto}')">✅ Reactivar</button>`
+          : `<button class="btn" style="border:1px solid #f59e0b; color:#f59e0b; font-size:12px; padding:6px 12px; font-weight:600; background:transparent; border-radius:4px; cursor:pointer;" onclick="suspenderPacienteManual(${p.idPaciente}, '${p.nombreCompleto}')">🚫 Suspender</button>`;
+
+        return `
+          <tr style="border-bottom:1px solid ${COLOR_MINT.mintLight}44; ${p.suspendido ? 'background:#fff9f9;' : ''}">
+            <td style="padding:14px 12px; color:${COLOR_MINT.emeraldDark};"><strong>${p.nombreCompleto}</strong></td>
+            <td style="padding:14px 12px; color:${COLOR_MINT.lightGray};">${p.email}</td>
+            <td style="padding:14px 12px;">${p.dni}</td>
+            <td style="padding:14px 12px;">${p.ausencias}/3</td>
+            <td style="padding:14px 12px;">${badgeSuspension}</td>
+            <td style="padding:14px 12px; text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+              <button class="btn btn-ghost" style="border:1px solid ${COLOR_MINT.mintLight}; color:${COLOR_MINT.emeraldDark}; font-size:12px; padding:6px 12px; font-weight:600;" onclick="abrirTurnoParaPaciente(${p.id}, '${p.nombreCompleto}')">📅 Agendar</button>
+              ${botonSuspension}
+            </td>
+          </tr>
+        `;
+      }).join('');
 
   renderizar(`
     <div id="app-layout">${htmlSidebar('gestion_pacientes')}<div id="main-content" class="fade-in" style="background-color:${COLOR_MINT.bgTint}; min-height:100vh;">
@@ -355,7 +367,8 @@ async function renderGestionPacientes() {
                 <th style="padding:16px 12px;">Nombre</th>
                 <th style="padding:16px 12px;">Email</th>
                 <th style="padding:16px 12px;">DNI</th>
-                <th style="padding:16px 12px;">Teléfono</th>
+                <th style="padding:16px 12px;">Ausencias</th>
+                <th style="padding:16px 12px;">Estado</th>
                 <th style="padding:16px 12px; text-align:right;">Acciones</th>
               </tr>
             </thead>
