@@ -126,12 +126,19 @@ if (window.location.hash !== '') {
 
 // Crear usuario genérico (admin u otro rol sin perfil extra)
 api.crearUsuarioGenerico = async (email, password, rol, nombre, apellido, dni, telefono) => {
-    const { error } = await clienteSupabase
+    const { data, error } = await clienteSupabase
         .from('usuarios')
-        .insert([{ email, contrasenia: password, rol, nombre, apellido, dni, telefono }]);
+        .insert([{ email, contrasenia: password, rol, nombre, apellido, dni, telefono }])
+        .select();
     if (error) {
         if (error.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
         return { success: false, error: error.message };
+    }
+    // Si es paciente, crear perfil en tabla pacientes
+    if (rol === 'paciente' && data && data[0]) {
+        await clienteSupabase
+            .from('pacientes')
+            .insert([{ id_paciente: data[0].id_usuario, nombre, apellido, dni, telefono }]);
     }
     return { success: true };
 };

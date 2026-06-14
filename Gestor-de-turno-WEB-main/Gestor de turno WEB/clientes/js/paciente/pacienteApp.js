@@ -83,3 +83,50 @@ function filtrarEspecialidades(texto) {
     card.style.display = nombre.includes(filtro) ? '' : 'none';
   });
 }
+
+function abrirModalConfirmacion() {
+  const { especialidadId, doctorId, fecha, hora } = estado.nuevoTurno;
+  const esp = estado.especialidades.find(e => e.id == especialidadId);
+  const doc = estado.usuarios.find(u => u.id == doctorId);
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-confirm-turno';
+  modal.style.cssText = `position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;`;
+  modal.innerHTML = `
+    <div style="background:white; border-radius:12px; padding:32px; max-width:440px; width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.2); text-align:center;">
+      <div style="font-size:48px; margin-bottom:16px;">📅</div>
+      <h3 style="color:${COLOR_MINT.emeraldDark}; font-weight:700; margin:0 0 8px 0; font-size:20px;">¿Confirmar turno?</h3>
+      <p style="color:${COLOR_MINT.lightGray}; font-size:14px; margin-bottom:24px;">Estás por solicitar el siguiente turno médico</p>
+      <div style="background:${COLOR_MINT.bgTint}; border-radius:8px; padding:16px; margin-bottom:24px; text-align:left;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; gap:8px;">
+            <span style="color:${COLOR_MINT.emeraldDark}; font-weight:700; font-size:13px; min-width:110px;">Especialidad:</span>
+            <span style="color:#333; font-size:13px;">${esp ? esp.nombre : '—'}</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <span style="color:${COLOR_MINT.emeraldDark}; font-weight:700; font-size:13px; min-width:110px;">Profesional:</span>
+            <span style="color:#333; font-size:13px;">${doc ? doc.nombreCompleto : '—'}</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <span style="color:${COLOR_MINT.emeraldDark}; font-weight:700; font-size:13px; min-width:110px;">Fecha:</span>
+            <span style="color:#333; font-size:13px;">${fecha}</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <span style="color:${COLOR_MINT.emeraldDark}; font-weight:700; font-size:13px; min-width:110px;">Horario:</span>
+            <span style="color:#333; font-size:13px;">${hora} hs</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-ghost" style="flex:1; border:1px solid ${COLOR_MINT.mintLight}; color:${COLOR_MINT.lightGray};" onclick="document.getElementById('modal-confirm-turno').remove()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:2; background-color:${COLOR_MINT.vibrantMint}; border-color:${COLOR_MINT.vibrantMint}; font-weight:700;" onclick="confirmarTurnoDesdeModal()">✅ Confirmar Turno</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function confirmarTurnoDesdeModal() {
+  document.getElementById('modal-confirm-turno').remove();
+  await confirmarTurno();
+}

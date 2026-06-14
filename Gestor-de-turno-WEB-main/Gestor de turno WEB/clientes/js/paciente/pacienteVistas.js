@@ -138,8 +138,7 @@ function renderNuevoTurno() {
         <p style="margin-bottom:8px; color: #333;"><strong>Horario de cita:</strong> ${estado.nuevoTurno.hora} hs</p>
         <div style="display:flex; gap:10px; margin-top:25px">
           <button class="btn btn-ghost" style="border:1px solid ${COLOR_MINT.mintLight}; color: ${COLOR_MINT.lightGray};" onclick="irPasoTurno(3)">Atrás</button>
-          <button class="btn btn-success" style="flex:1; background-color: ${COLOR_MINT.vibrantMint}; border-color: ${COLOR_MINT.vibrantMint}; font-weight:700;" onclick="confirmarTurno()">Confirmar y Solicitar</button>
-        </div>
+          <button class="btn btn-success" style="flex:1; background-color: ${COLOR_MINT.vibrantMint}; border-color: ${COLOR_MINT.vibrantMint}; font-weight:700;" onclick="abrirModalConfirmacion()">Confirmar y Solicitar</button>
       </div>
     `;
   }

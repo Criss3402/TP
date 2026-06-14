@@ -421,7 +421,7 @@ api.getPacientePorUsuario = async (idUsuario) => {
         .from('pacientes')
         .select('*')
         .eq('id_paciente', idUsuario)
-        .single();
+        .maybeSingle();
     if (error) return { success: false, data: null };
     return { success: true, data };
 };
