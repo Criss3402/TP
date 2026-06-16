@@ -37,26 +37,26 @@ async function cambiarEstadoTurno(id, est) {
 }
 
 async function guardarAgendaDoctor() {
-  const diaSemana = document.getElementById('doc-agenda-dia').value;
-  const horaInicio = document.getElementById('doc-agenda-inicio').value;
-  const horaFin = document.getElementById('doc-agenda-fin').value;
+  const dia       = document.getElementById('doc-agenda-dia').value;
+  const inicio    = document.getElementById('doc-agenda-inicio').value;
+  const fin       = document.getElementById('doc-agenda-fin').value;
+  const duracion  = parseInt(document.getElementById('doc-duracion').value);
 
-  if (diaSemana === "" || !horaInicio || !horaFin) { notificar('Por favor, completa todos los campos.', 'error'); return; }
-  if (horaInicio >= horaFin) { notificar('La hora de entrada debe ser anterior a la de salida.', 'error'); return; }
+  if (!dia || !inicio || !fin) { notificar('Completá todos los campos.', 'error'); return; }
+  if (inicio >= fin) { notificar('La hora de inicio debe ser anterior a la de fin.', 'error'); return; }
 
   const respuesta = await api.crearAgenda({
-    doctorId:  parseInt(estado.usuario.id),
-    diaSemana: parseInt(diaSemana),
-    horaInicio,
-    horaFin
+    doctorId: estado.usuario.id,
+    diaSemana: parseInt(dia),
+    horaInicio: inicio,
+    horaFin: fin,
+    duracionMinutos: duracion
   });
 
   if (!respuesta.success) { notificar('❌ ' + respuesta.error, 'error'); return; }
-
+  notificar('✅ Horario guardado.');
   const resAgendas = await api.getAgendas();
   if (resAgendas.success) estado.agendas = resAgendas.data;
-
-  notificar('✅ Tu horario de atención ha sido actualizado.');
   renderMiAgendaDoctor();
 }
 
@@ -117,4 +117,19 @@ async function confirmarAtencion(idTurno) {
   const resTurnos = await api.getTurnos();
   if (resTurnos.success) estado.turnos = resTurnos.data;
   renderMisTurnos();
+}
+
+async function guardarLimiteTurnos() {
+  const limite = parseInt(document.getElementById('doc-limite').value);
+  if (!limite || limite < 1) { notificar('Ingresá un límite válido.', 'error'); return; }
+
+  const { error } = await clienteSupabase
+    .from('medicos')
+    .update({ limite_turnos_dia: limite })
+    .eq('id_medico', estado.usuario.id);
+
+  if (error) { notificar('❌ No se pudo guardar el límite.', 'error'); return; }
+
+  estado.usuario.limiteTurnosDia = limite;
+  notificar(`✅ Límite actualizado a ${limite} turnos por día.`);
 }

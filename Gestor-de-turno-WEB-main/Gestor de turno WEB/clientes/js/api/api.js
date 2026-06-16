@@ -121,14 +121,15 @@ const api = {
       if (usr.rol === 'recepcionista') rolFrontend = 'RECEPCIONISTA';
 
       return {
-          id: usr.id_usuario,
-          username: usr.email, 
-          rol: rolFrontend, 
-          especialidadId: especialidadId,
-          dni: usr.dni || '',
-          telefono: usr.telefono || '',
-          nombreCompleto: `${nombre} ${apellido}`.trim()
-      };
+    id: usr.id_usuario,
+    username: usr.email, 
+    rol: rolFrontend, 
+    especialidadId: especialidadId,
+    dni: usr.dni || '',
+    telefono: usr.telefono || '',
+    nombreCompleto: `${nombre} ${apellido}`.trim(),
+    limiteTurnosDia: med?.limite_turnos_dia || 10
+};
   });
   return { success: true, data: usuariosAdaptados };
 },
@@ -257,28 +258,27 @@ cambiarEstado: async (idTurno, nuevoEstado, diagnostico = null, indicaciones = n
       return { success: false, data: [] };
     }
     const adaptadas = data.map(a => ({
-      id:         a.id_horario,
-      doctorId:   a.id_medico,
-      diaSemana:  a.dia_semana,
-      horaInicio: a.hora_inicio,
-      horaFin:    a.hora_fin
+      id:               a.id_horario,
+      doctorId:         a.id_medico,
+      diaSemana:        a.dia_semana,
+      horaInicio:       a.hora_inicio,
+      horaFin:          a.hora_fin,
+      duracionMinutos:  a.duracion_minutos || 30
     }));
     return { success: true, data: adaptadas };
   },
 
-  crearAgenda: async (datos) => {
+ crearAgenda: async (datos) => {
     const { error } = await clienteSupabase
       .from('horarios_atencion')
       .insert([{
-        id_medico:   datos.doctorId,
-        dia_semana:  datos.diaSemana,
-        hora_inicio: datos.horaInicio,
-        hora_fin:    datos.horaFin
+        id_medico:         datos.doctorId,
+        dia_semana:        datos.diaSemana,
+        hora_inicio:       datos.horaInicio,
+        hora_fin:          datos.horaFin,
+        duracion_minutos:  datos.duracionMinutos || 30
       }]);
-    if (error) {
-      console.error('Error al crear agenda:', error);
-      return { success: false, error: 'No se pudo guardar el horario.' };
-    }
+    if (error) return { success: false, error: error.message };
     return { success: true };
   },
 

@@ -22,7 +22,7 @@ function renderMiAgendaDoctor() {
 
     const eventosHTML = eventosDia.map(e => `
       <div style="${estilosEvento}" onclick="borrarAgendaDoctor(${e.id})" title="Clic para eliminar este horario">
-        ${e.horaInicio} - ${e.horaFin}
+        ${e.horaInicio} - ${e.horaFin} (${e.duracionMinutos || 30}min)
       </div>
     `).join('');
 
@@ -32,7 +32,6 @@ function renderMiAgendaDoctor() {
     </div>`;
   }
 
-  // Inyectar estilos hover en <head> (única forma correcta de hacerlo)
   const styleId = 'cal-doc-styles';
   if (!document.getElementById(styleId)) {
     const tag = document.createElement('style');
@@ -52,8 +51,13 @@ function renderMiAgendaDoctor() {
             <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600;">Día de la semana</label>
             <select id="doc-agenda-dia" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;">
               <option value="">Seleccionar día...</option>
-              <option value="1">Todos los Lunes</option><option value="2">Todos los Martes</option><option value="3">Todos los Miércoles</option>
-              <option value="4">Todos los Jueves</option><option value="5">Todos los Viernes</option><option value="6">Todos los Sábados</option><option value="0">Todos los Domingos</option>
+              <option value="1">Todos los Lunes</option>
+              <option value="2">Todos los Martes</option>
+              <option value="3">Todos los Miércoles</option>
+              <option value="4">Todos los Jueves</option>
+              <option value="5">Todos los Viernes</option>
+              <option value="6">Todos los Sábados</option>
+              <option value="0">Todos los Domingos</option>
             </select>
           </div>
           <div class="field" style="width:110px; margin-bottom:0;">
@@ -64,7 +68,23 @@ function renderMiAgendaDoctor() {
             <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600;">Hora Salida</label>
             <input id="doc-agenda-fin" type="time" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;" />
           </div>
+          <div class="field" style="width:130px; margin-bottom:0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600;">Duración (min)</label>
+            <select id="doc-duracion" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;">
+              <option value="15">15 minutos</option>
+              <option value="20">20 minutos</option>
+              <option value="30" selected>30 minutos</option>
+              <option value="45">45 minutos</option>
+              <option value="60">60 minutos</option>
+              <option value="90">90 minutos</option>
+            </select>
+          </div>
+          <div class="field" style="width:130px; margin-bottom:0;">
+            <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600;">Límite diario</label>
+            <input id="doc-limite" type="number" min="1" max="50" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333;" placeholder="Ej: 10" value="${estado.usuario.limiteTurnosDia || 10}" />
+          </div>
           <button class="btn btn-primary" style="height:38px; background-color:${COLOR_MINT.vibrantMint}; border-color:${COLOR_MINT.vibrantMint}; font-weight:700;" onclick="guardarAgendaDoctor()">Establecer Horario</button>
+          <button class="btn btn-ghost" style="height:38px; border:1px solid ${COLOR_MINT.mintLight}; color:${COLOR_MINT.emeraldDark}; font-weight:600;" onclick="guardarLimiteTurnos()">💾 Guardar Límite</button>
         </div>
       </div>
 

@@ -42,7 +42,7 @@ function renderNuevoTurno() {
       </div>
     `;
   }
-  // 3. CALENDARIO DE TURNOS (BLINDADO CON ESTILOS EN LÍNEA)
+ // 3. CALENDARIO DE TURNOS (BLINDADO CON ESTILOS EN LÍNEA)
   else if (paso === 3) {
     const esp = estado.especialidades.find(e => e.id == especialidadId);
     const doc = estado.usuarios.find(u => u.id == doctorId);
@@ -52,10 +52,22 @@ function renderNuevoTurno() {
     const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
     let offset = primerDia === 0 ? 6 : primerDia - 1;
     
-    // Variables de estilo robustas
     const estilosCeldaVacia = `background:#f8fafc; min-height:95px; padding:6px; display:flex; flex-direction:column; gap:5px;`;
-    const estilosCeldaActiva = `background:white; min-height:95px; padding:6px; display:flex; flex-direction:column; gap:5px;`;
+    const estilosCeldaActiva = `background:white; min-height:95px; max-height:200px; overflow-y:auto; padding:6px; display:flex; flex-direction:column; gap:5px;`;
     const estilosEvento = `background:${COLOR_MINT.vibrantMint}; color:white; text-align:center; padding:5px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px; box-shadow:0 2px 4px rgba(0,0,0,0.1);`;
+
+    const generarSlots = (horaInicio, horaFin, duracion) => {
+      const slots = [];
+      let [h, m] = horaInicio.split(':').map(Number);
+      const [hFin, mFin] = horaFin.split(':').map(Number);
+      const finEnMinutos = hFin * 60 + mFin;
+      while (h * 60 + m < finEnMinutos) {
+        slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+        m += duracion;
+        if (m >= 60) { h += Math.floor(m/60); m = m % 60; }
+      }
+      return slots;
+    };
 
     let celdas = '';
     for (let i = 0; i < offset; i++) {
@@ -69,11 +81,24 @@ function renderNuevoTurno() {
       const diaDeLaSemana = new Date(anioActual, mesActual, dia).getDay();
       const turnosDia = agendasDelDoc.filter(a => a.diaSemana === diaDeLaSemana);
       
-      const turnosBtn = turnosDia.map(t => `
-        <div class="cal-evento-paciente" style="${estilosEvento}" onclick="seleccionarTurnoCalendario('${fechaFmt}', '${t.horaInicio}')">
-          ${t.horaInicio}
-        </div>
-      `).join('');
+      const limiteDiario = doc?.limiteTurnosDia || 10;
+      const turnosYaAgendados = estado.turnos.filter(t => 
+        t.doctorNombre === doc?.nombreCompleto && 
+        t.fecha === fechaFmt && 
+        (t.estado === 'Solicitado' || t.estado === 'Confirmado')
+      ).length;
+      const diaLleno = turnosYaAgendados >= limiteDiario;
+
+      const turnosBtn = diaLleno
+        ? `<div style="background:#fef2f2; color:#dc2626; text-align:center; padding:4px; border-radius:4px; font-size:11px; font-weight:600;">🚫 Completo (${turnosYaAgendados}/${limiteDiario})</div>`
+        : turnosDia.flatMap(t => {
+            const slots = generarSlots(t.horaInicio, t.horaFin, t.duracionMinutos || 30);
+            return slots.map(slot => `
+              <div class="cal-evento-paciente" style="${estilosEvento}" onclick="seleccionarTurnoCalendario('${fechaFmt}', '${slot}')">
+                ${slot}
+              </div>
+            `);
+          }).join('');
       
       celdas += `
         <div class="cal-dia-celda-paciente" style="${estilosCeldaActiva}">
@@ -82,8 +107,6 @@ function renderNuevoTurno() {
         </div>
       `;
     }
-
-    // Inyectar estilos hover en <head>
     const styleId = 'cal-paciente-styles';
     if (!document.getElementById(styleId)) {
       const tag = document.createElement('style');
