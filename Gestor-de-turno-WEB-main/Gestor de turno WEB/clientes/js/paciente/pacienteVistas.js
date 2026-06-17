@@ -147,7 +147,7 @@ function renderNuevoTurno() {
 }
 
 function renderHistorial() {
-  const misRegistros = estado.turnos.filter(t => t.pacienteNombre === estado.usuario.nombreCompleto && t.estado === 'Atendido');
+  const misRegistros = estado.turnos.filter(t => t.pacienteId == estado.usuario.id && t.estado === 'Atendido');
   let filasHTML = '';
   
   if (misRegistros.length === 0) {

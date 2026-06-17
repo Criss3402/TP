@@ -9,53 +9,56 @@ const estado = {
   nuevoTurno: { paso: 1, especialidadId: null, doctorId: null, fecha: '', hora: '' }
 };
 
-const clienteSupabase = window.supabase.createClient('https://timkuxzckzvqnjvtstwr.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbWt1eHpja3p2cW5qdnRzdHdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTI2OTEsImV4cCI6MjA5NDc4ODY5MX0.d5ZcsE2mfqfAOk5DJ_hJgKlASz19aoPLgMSGHzlkqpM');
+const SUPABASE_URL = 'https://timkuxzckzvqnjvtstwr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbWt1eHpja3p2cW5qdnRzdHdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTI2OTEsImV4cCI6MjA5NDc4ODY5MX0.d5ZcsE2mfqfAOk5DJ_hJgKlASz19aoPLgMSGHzlkqpM';
+const clienteSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 const extraerPerfil = (perfil) => {
     if (!perfil) return null;
     return Array.isArray(perfil) ? perfil[0] : perfil;
 };
 
+function construirUsuario(data) {
+  const med = extraerPerfil(data.medicos);
+  const pac = extraerPerfil(data.pacientes);
+  let nombre = 'Admin', apellido = 'General', especialidadId = null;
+  if (med && med.nombre) { nombre = med.nombre; apellido = med.apellido; especialidadId = med.id_especialidad; }
+  else if (pac && pac.nombre) { nombre = pac.nombre; apellido = pac.apellido; }
+  let rolFrontend = data.rol.toUpperCase();
+  if (data.rol === 'medico') rolFrontend = 'DOCTOR';
+  if (data.rol === 'recepcionista') rolFrontend = 'RECEPCIONISTA';
+  return {
+    id: data.id_usuario,
+    username: data.email,
+    rol: rolFrontend,
+    especialidadId: especialidadId,
+    nombreCompleto: `${nombre} ${apellido}`.trim()
+  };
+}
+
 const api = {
-  login: async (username, password) => {
+    login: async (username, password) => {
+    // 1. Autenticar con Supabase Auth (valida la contraseña hasheada)
+    const { data: authData, error: authError } = await clienteSupabase.auth.signInWithPassword({
+      email: username,
+      password: password
+    });
+    if (authError || !authData.user) {
+      return { success: false, error: 'Usuario o contraseña incorrectos' };
+    }
+
+    // 2. Traer el perfil de dominio por auth_id
     const { data, error } = await clienteSupabase
       .from('usuarios')
       .select('*, medicos(*), pacientes(*)')
-      .eq('email', username)
-      .eq('contrasenia', password)
+      .eq('auth_id', authData.user.id)
       .single();
-
-    if (error || !data) return { success: false, error: 'Usuario o contraseña incorrectos' };
-
-    const med = extraerPerfil(data.medicos);
-    const pac = extraerPerfil(data.pacientes);
-    
-    let nombre = 'Admin', apellido = 'General', especialidadId = null;
-
-    if (med && med.nombre) {
-        nombre = med.nombre;
-        apellido = med.apellido;
-        especialidadId = med.id_especialidad;
-    } else if (pac && pac.nombre) {
-        nombre = pac.nombre;
-        apellido = pac.apellido;
+    if (error || !data) {
+      return { success: false, error: 'No se encontró el perfil del usuario.' };
     }
 
-    let rolFrontend = data.rol.toUpperCase(); 
-    if (data.rol === 'medico') rolFrontend = 'DOCTOR';
-    if (data.rol === 'recepcionista') rolFrontend = 'RECEPCIONISTA';
-
-    return { 
-      success: true, 
-      token: 'token-real-bd', 
-      usuario: { 
-          id: data.id_usuario, 
-          username: data.email, 
-          rol: rolFrontend,
-          especialidadId: especialidadId,
-          nombreCompleto: `${nombre} ${apellido}`.trim() 
-      } 
-    };
+       return { success: true, token: 'token-real-bd', usuario: construirUsuario(data) };
   },
 
   getEspecialidades: async () => {
@@ -87,6 +90,8 @@ const api = {
     doctorNombre: med ? `${med.nombre} ${med.apellido}`.trim() : 'Sin asignar',
     pacienteNombre: pac ? `${pac.nombre} ${pac.apellido}`.trim() : 'Sin asignar',
     especialidadId: med ? med.id_especialidad : null,
+    pacienteId:     t.id_paciente,
+    medicoId:       t.id_medico,
     diagnostico: t.diagnostico || '',
     indicaciones: t.indicaciones || ''
 };
@@ -155,37 +160,58 @@ const api = {
           id_especialidad: datos.especialidadId
       }]);
 
-    if (errorMedico) return { success: false, error: 'Falló el perfil.' };
-    return { success: true };
+    if (errorMedico) {
+      await clienteSupabase.from('usuarios').delete().eq('id_usuario', idGenerado);
+      return { success: false, error: 'No se pudo crear el perfil del médico. Se canceló la cuenta.' };
+    }
   },
 
-  crearPaciente: async (datos) => {
+    crearPaciente: async (datos) => {
+    // 1. Cliente temporal aislado: NO toca la sesión activa del navegador
+    const clienteTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+
+    // 2. Crear la cuenta de acceso en Auth
+    const { data: authData, error: authError } = await clienteTemp.auth.signUp({
+      email: datos.email,
+      password: datos.password
+    });
+    if (authError || !authData.user) {
+      if (authError?.message?.toLowerCase().includes('already')) {
+        return { success: false, error: 'Ese correo ya está registrado.' };
+      }
+      return { success: false, error: 'No se pudo crear la cuenta.' };
+    }
+    const authId = authData.user.id;
+
+    // 3. Crear la fila de dominio en usuarios (cliente principal), con auth_id y sin contrasenia
     const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase
       .from('usuarios')
-      .insert([{ email: datos.email, contrasenia: datos.password, rol: 'paciente' }])
+      .insert([{
+        email: datos.email, rol: 'paciente', auth_id: authId,
+        nombre: datos.nombre, apellido: datos.apellido, dni: datos.dni, telefono: datos.telefono
+      }])
       .select();
-
     if (errorUsuario) {
       if (errorUsuario.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
       return { success: false, error: 'No se pudo crear la cuenta.' };
     }
-
     const idGenerado = usuarioCreado[0].id_usuario;
 
+    // 4. Crear el perfil en pacientes (con rollback si falla)
     const { error: errorPaciente } = await clienteSupabase
       .from('pacientes')
       .insert([{
-        id_paciente: idGenerado,
-        nombre:      datos.nombre,
-        apellido:    datos.apellido,
-        dni:         datos.dni,
-        telefono:    datos.telefono
+        id_paciente: idGenerado, nombre: datos.nombre, apellido: datos.apellido,
+        dni: datos.dni, telefono: datos.telefono
       }]);
-
     if (errorPaciente) {
+      await clienteSupabase.from('usuarios').delete().eq('id_usuario', idGenerado);
       if (errorPaciente.code === '23505') return { success: false, error: 'Ese DNI ya está registrado.' };
       return { success: false, error: 'No se pudo crear el perfil del paciente.' };
     }
+
     return { success: true };
   },
 
@@ -442,4 +468,16 @@ api.reactivarPaciente = async (idPaciente) => {
         .eq('id_paciente', idPaciente);
     if (error) return { success: false, error: error.message };
     return { success: true };
+};
+
+api.recuperarSesion = async () => {
+    const { data: { session } } = await clienteSupabase.auth.getSession();
+    if (!session) return { success: false };
+    const { data, error } = await clienteSupabase
+        .from('usuarios')
+        .select('*, medicos(*), pacientes(*)')
+        .eq('auth_id', session.user.id)
+        .single();
+    if (error || !data) return { success: false };
+    return { success: true, usuario: construirUsuario(data) };
 };

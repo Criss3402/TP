@@ -22,6 +22,6 @@ function tienePermiso(rol, vista) {
 function filtrarTurnosPorRol(turnos, usuario) {
     if (usuario.rol === ROLES.ADMIN || usuario.rol === ROLES.RECEPCIONISTA) return turnos;
     if (usuario.rol === ROLES.DOCTOR) return turnos.filter(t => t.especialidadId == usuario.especialidadId);
-    if (usuario.rol === ROLES.PACIENTE) return turnos.filter(t => t.pacienteNombre === usuario.nombreCompleto);
+    if (usuario.rol === ROLES.PACIENTE) return turnos.filter(t => t.pacienteId == usuario.id);
     return [];
 }

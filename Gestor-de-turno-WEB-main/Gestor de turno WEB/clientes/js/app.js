@@ -52,6 +52,7 @@ async function ejecutarRegistroPaciente() {
 }
 
 async function cerrarSesion() {
+  await clienteSupabase.auth.signOut();  
   estado.token = null;
   estado.usuario = null;
   window.location.hash = '';
@@ -119,11 +120,22 @@ window.addEventListener('hashchange', () => {
   }
 });
 
-if (window.location.hash !== '') {
-    window.location.hash = '';
-} else {
+(async () => {
+  const res = await api.recuperarSesion();
+  if (!res.success) {
+    if (window.location.hash) window.location.hash = '';
     mostrarPantallaInicio();
-}
+    return;
+  }
+  estado.usuario = res.usuario;
+  estado.token = 'auth';
+  await cargarDatosIniciales();
+  if (!window.location.hash) {
+    window.location.hash = 'dashboard';
+  } else {
+    window.dispatchEvent(new Event('hashchange'));
+  }
+})();
 
 // Crear usuario genérico (admin u otro rol sin perfil extra)
 api.crearUsuarioGenerico = async (email, password, rol, nombre, apellido, dni, telefono) => {

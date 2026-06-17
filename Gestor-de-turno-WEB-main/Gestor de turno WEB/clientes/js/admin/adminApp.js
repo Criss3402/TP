@@ -341,7 +341,7 @@ function buscarHistorialPaciente() {
   const nombrePaciente = paciente ? paciente.nombreCompleto : '';
 
   const registros = estado.turnos.filter(t => 
-    t.pacienteNombre === nombrePaciente && t.estado === 'Atendido'
+    t.pacienteId == idUsuario && t.estado === 'Atendido'
   );
 
   const filasHTML = registros.length === 0
