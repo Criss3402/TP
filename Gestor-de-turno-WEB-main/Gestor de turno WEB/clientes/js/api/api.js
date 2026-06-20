@@ -138,33 +138,48 @@ const api = {
   return { success: true, data: usuariosAdaptados };
 },
   
+
   crearMedico: async (datos) => {
+    const clienteTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data: authData, error: authError } = await clienteTemp.auth.signUp({
+      email: datos.username,
+      password: datos.password || '123456'
+    });
+    if (authError || !authData.user) {
+      if (authError?.message?.toLowerCase().includes('already')) {
+        return { success: false, error: 'Ese correo ya está registrado.' };
+      }
+      return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+    }
     const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase
       .from('usuarios')
-      .insert([{ email: datos.username, rol: 'medico', contrasenia: datos.password || '123456' }])
+      .insert([{
+        email: datos.username, rol: 'medico', auth_id: authData.user.id,
+        nombre: datos.nombre, apellido: datos.apellido, dni: datos.dni, telefono: datos.telefono
+      }])
       .select();
-
-    if (errorUsuario) return { success: false, error: 'No se pudo crear la cuenta.' };
-
+    if (errorUsuario) {
+      if (errorUsuario.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
+      return { success: false, error: 'No se pudo crear la cuenta.' };
+    }
     const idGenerado = usuarioCreado[0].id_usuario;
-
     const { error: errorMedico } = await clienteSupabase
       .from('medicos')
       .insert([{
-          id_medico: idGenerado, 
-          nombre: datos.nombre,
-          apellido: datos.apellido,
-          dni: datos.dni,
-          matricula: datos.matricula,
-          telefono: datos.telefono,
-          id_especialidad: datos.especialidadId
+        id_medico: idGenerado, nombre: datos.nombre, apellido: datos.apellido,
+        dni: datos.dni, matricula: datos.matricula, telefono: datos.telefono,
+        id_especialidad: datos.especialidadId
       }]);
-
     if (errorMedico) {
       await clienteSupabase.from('usuarios').delete().eq('id_usuario', idGenerado);
+      if (errorMedico.code === '23505') return { success: false, error: 'El DNI o la matrícula ya están registrados.' };
       return { success: false, error: 'No se pudo crear el perfil del médico. Se canceló la cuenta.' };
     }
+    return { success: true };
   },
+
 
     crearPaciente: async (datos) => {
     // 1. Cliente temporal aislado: NO toca la sesión activa del navegador
@@ -401,19 +416,34 @@ api.getPacientes = async () => {
     };
 };
 
+
 // Crear cuenta de recepcionista (solo admin puede)
 api.crearRecepcionista = async (datos) => {
-    const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase
-        .from('usuarios')
-        .insert([{ email: datos.email, rol: 'recepcionista', contrasenia: datos.password || '123456' }])
-        .select();
+    const clienteTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data: authData, error: authError } = await clienteTemp.auth.signUp({
+      email: datos.email,
+      password: datos.password || '123456'
+    });
+    if (authError || !authData.user) {
+      if (authError?.message?.toLowerCase().includes('already')) {
+        return { success: false, error: 'Ese correo ya está registrado.' };
+      }
+      return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+    }
+    const { error: errorUsuario } = await clienteSupabase
+      .from('usuarios')
+      .insert([{ email: datos.email, rol: 'recepcionista', auth_id: authData.user.id }]);
     if (errorUsuario) {
-        console.error('Error Supabase crearRecepcionista:', errorUsuario);
-        if (errorUsuario.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
-        return { success: false, error: `Error BD: ${errorUsuario.message}` };
+      if (errorUsuario.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
+      return { success: false, error: 'No se pudo crear la cuenta.' };
     }
     return { success: true };
 };
+
+
+
 api.registrarAusencia = async (idPaciente) => {
     // Incrementar contador de ausencias
     const { data, error: errorGet } = await clienteSupabase

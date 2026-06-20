@@ -37,8 +37,8 @@ async function guardarUsuarioSistema() {
     if (!r.success) { notificar('❌ ' + r.error, 'error'); return; }
     notificar('✅ Usuario actualizado.');
   } else {
-    if (!password || password.length < 4) {
-      notificar('Ingresá una contraseña de al menos 4 caracteres.', 'error');
+    if (!password || password.length < 6) {
+      notificar('Ingresá una contraseña de al menos 6 caracteres.', 'error');
       return;
     }
     const r = await api.crearUsuarioGenerico(email, password, rol, nombre, apellido, dni, telefono);
@@ -193,8 +193,8 @@ async function guardarMedico() {
     if (!r1.success || !r2.success) { notificar('❌ Error al actualizar.', 'error'); return; }
     notificar('✅ Médico actualizado correctamente.');
   } else {
-    if (!password || password.length < 4) {
-      notificar('Ingresá una contraseña de al menos 4 caracteres.', 'error');
+    if (!password || password.length < 6) {
+      notificar('Ingresá una contraseña de al menos 6 caracteres.', 'error');
       return;
     }
     const respuesta = await api.crearMedico({ nombre, apellido, username: email, dni, telefono, matricula, especialidadId: espId || null, password });
@@ -304,7 +304,7 @@ async function guardarRecepcionista() {
   const email    = document.getElementById('recep-email').value.trim();
   const password = document.getElementById('recep-pass').value;
   if (!email || !password) { notificar('Completá email y contraseña.', 'error'); return; }
-  if (password.length < 4) { notificar('La contraseña debe tener al menos 4 caracteres.', 'error'); return; }
+  if (password.length < 6) { notificar('La contraseña debe tener al menos 4 caracteres.', 'error'); return; }
 
   const respuesta = await api.crearRecepcionista({ email, password });
   if (!respuesta.success) { notificar('❌ ' + respuesta.error, 'error'); return; }

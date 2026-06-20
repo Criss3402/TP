@@ -32,7 +32,7 @@ async function ejecutarRegistroPaciente() {
     mostrarRegistroPaciente('Completá todos los campos obligatorios.');
     return;
   }
-  if (password.length < 4) {
+  if (password.length < 6) {
     mostrarRegistroPaciente('La contraseña debe tener al menos 4 caracteres.');
     return;
   }
@@ -139,15 +139,24 @@ window.addEventListener('hashchange', () => {
 
 // Crear usuario genérico (admin u otro rol sin perfil extra)
 api.crearUsuarioGenerico = async (email, password, rol, nombre, apellido, dni, telefono) => {
+    const clienteTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data: authData, error: authError } = await clienteTemp.auth.signUp({ email, password });
+    if (authError || !authData.user) {
+        if (authError?.message?.toLowerCase().includes('already')) {
+            return { success: false, error: 'Ese correo ya está registrado.' };
+        }
+        return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+    }
     const { data, error } = await clienteSupabase
         .from('usuarios')
-        .insert([{ email, contrasenia: password, rol, nombre, apellido, dni, telefono }])
+        .insert([{ email, rol, auth_id: authData.user.id, nombre, apellido, dni, telefono }])
         .select();
     if (error) {
         if (error.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
         return { success: false, error: error.message };
     }
-    // Si es paciente, crear perfil en tabla pacientes
     if (rol === 'paciente' && data && data[0]) {
         await clienteSupabase
             .from('pacientes')
