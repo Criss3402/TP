@@ -9,7 +9,9 @@ const estado = {
   nuevoTurno: { paso: 1, especialidadId: null, doctorId: null, fecha: '', hora: '' }
 };
 
-const clienteSupabase = window.supabase.createClient('https://timkuxzckzvqnjvtstwr.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbWt1eHpja3p2cW5qdnRzdHdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTI2OTEsImV4cCI6MjA5NDc4ODY5MX0.d5ZcsE2mfqfAOk5DJ_hJgKlASz19aoPLgMSGHzlkqpM');
+const SUPABASE_URL = 'https://timkuxzckzvqnjvtstwr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbWt1eHpja3p2cW5qdnRzdHdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTI2OTEsImV4cCI6MjA5NDc4ODY5MX0.d5ZcsE2mfqfAOk5DJ_hJgKlASz19aoPLgMSGHzlkqpM';
+const clienteSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const extraerPerfil = (perfil) => {
     if (!perfil) return null;
@@ -18,19 +20,27 @@ const extraerPerfil = (perfil) => {
 
 const api = {
   login: async (username, password) => {
+    const { data: authData, error: authError } = await clienteSupabase.auth.signInWithPassword({
+      email: username,
+      password: password
+    });
+    if (authError || !authData.user) {
+      return { success: false, error: 'Usuario o contraseña incorrectos' };
+    }
+
     const { data, error } = await clienteSupabase
       .from('usuarios')
       .select('*, medicos(*), pacientes(*)')
-      .eq('email', username)
-      .eq('contrasenia', password)
+      .eq('auth_id', authData.user.id)
       .single();
-
-    if (error || !data) return { success: false, error: 'Usuario o contraseña incorrectos' };
+    if (error || !data) {
+      return { success: false, error: 'No se encontró el perfil del usuario.' };
+    }
 
     const med = extraerPerfil(data.medicos);
     const pac = extraerPerfil(data.pacientes);
     
-    let nombre = 'Admin', apellido = 'General', especialidadId = null;
+    let nombre = 'Sin', apellido = 'Nombre', especialidadId = null;
 
     if (med && med.nombre) {
         nombre = med.nombre;
@@ -39,6 +49,9 @@ const api = {
     } else if (pac && pac.nombre) {
         nombre = pac.nombre;
         apellido = pac.apellido;
+    } else if (data.nombre) {
+        nombre = data.nombre;
+        apellido = data.apellido || '';
     }
 
     let rolFrontend = data.rol.toUpperCase(); 
@@ -53,7 +66,10 @@ const api = {
           username: data.email, 
           rol: rolFrontend,
           especialidadId: especialidadId,
-          nombreCompleto: `${nombre} ${apellido}`.trim() 
+          dni: data.dni || '',
+          telefono: data.telefono || '',
+          nombreCompleto: `${nombre} ${apellido}`.trim(),
+          limiteTurnosDia: med?.limite_turnos_dia || 10
       } 
     };
   },
@@ -86,10 +102,12 @@ const api = {
     estado: t.estado, 
     doctorNombre: med ? `${med.nombre} ${med.apellido}`.trim() : 'Sin asignar',
     pacienteNombre: pac ? `${pac.nombre} ${pac.apellido}`.trim() : 'Sin asignar',
+    pacienteId: t.id_paciente,
     especialidadId: med ? med.id_especialidad : null,
     diagnostico: t.diagnostico || '',
     indicaciones: t.indicaciones || ''
 };
+
     });
     return { success: true, data: turnosAdaptados };
   },
@@ -135,12 +153,32 @@ const api = {
 },
   
   crearMedico: async (datos) => {
+    const clienteTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data: authData, error: authError } = await clienteTemp.auth.signUp({
+      email: datos.username,
+      password: datos.password || '123456'
+    });
+    if (authError || !authData.user) {
+      if (authError?.message?.toLowerCase().includes('already')) {
+        return { success: false, error: 'Ese correo ya está registrado.' };
+      }
+      return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+    }
+
     const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase
       .from('usuarios')
-      .insert([{ email: datos.username, rol: 'medico', contrasenia: datos.password || '123456' }])
+      .insert([{
+        email: datos.username, rol: 'medico', auth_id: authData.user.id,
+        nombre: datos.nombre, apellido: datos.apellido, dni: datos.dni, telefono: datos.telefono
+      }])
       .select();
 
-    if (errorUsuario) return { success: false, error: 'No se pudo crear la cuenta.' };
+    if (errorUsuario) {
+      if (errorUsuario.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
+      return { success: false, error: 'No se pudo crear la cuenta.' };
+    }
 
     const idGenerado = usuarioCreado[0].id_usuario;
 
@@ -161,9 +199,23 @@ const api = {
   },
 
   crearPaciente: async (datos) => {
+    const clienteTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data: authData, error: authError } = await clienteTemp.auth.signUp({
+      email: datos.email,
+      password: datos.password
+    });
+    if (authError || !authData.user) {
+      if (authError?.message?.toLowerCase().includes('already')) {
+        return { success: false, error: 'Ese correo ya está registrado.' };
+      }
+      return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+    }
+
     const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase
       .from('usuarios')
-      .insert([{ email: datos.email, contrasenia: datos.password, rol: 'paciente' }])
+      .insert([{ email: datos.email, rol: 'paciente', auth_id: authData.user.id, nombre: datos.nombre, apellido: datos.apellido, dni: datos.dni, telefono: datos.telefono }])
       .select();
 
     if (errorUsuario) {
@@ -188,7 +240,7 @@ const api = {
       return { success: false, error: 'No se pudo crear el perfil del paciente.' };
     }
     return { success: true };
-  },
+},
 
   crearTurno: async (datosTurno) => {
     const { error } = await clienteSupabase

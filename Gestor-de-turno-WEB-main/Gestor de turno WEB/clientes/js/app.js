@@ -32,8 +32,8 @@ async function ejecutarRegistroPaciente() {
     mostrarRegistroPaciente('Completá todos los campos obligatorios.');
     return;
   }
-  if (password.length < 4) {
-    mostrarRegistroPaciente('La contraseña debe tener al menos 4 caracteres.');
+  if (password.length < 6) {
+    mostrarRegistroPaciente('La contraseña debe tener al menos 6 caracteres.');
     return;
   }
   if (password !== password2) {
@@ -52,6 +52,7 @@ async function ejecutarRegistroPaciente() {
 }
 
 async function cerrarSesion() {
+  await clienteSupabase.auth.signOut();
   estado.token = null;
   estado.usuario = null;
   window.location.hash = '';
@@ -119,23 +120,27 @@ window.addEventListener('hashchange', () => {
   }
 });
 
-if (window.location.hash !== '') {
-    window.location.hash = '';
-} else {
-    mostrarPantallaInicio();
-}
-
 // Crear usuario genérico (admin u otro rol sin perfil extra)
 api.crearUsuarioGenerico = async (email, password, rol, nombre, apellido, dni, telefono) => {
+    const clienteTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data: authData, error: authError } = await clienteTemp.auth.signUp({ email, password });
+    if (authError || !authData.user) {
+        if (authError?.message?.toLowerCase().includes('already')) {
+            return { success: false, error: 'Ese correo ya está registrado.' };
+        }
+        return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+    }
+
     const { data, error } = await clienteSupabase
         .from('usuarios')
-        .insert([{ email, contrasenia: password, rol, nombre, apellido, dni, telefono }])
+        .insert([{ email, rol, auth_id: authData.user.id, nombre, apellido, dni, telefono }])
         .select();
     if (error) {
         if (error.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
         return { success: false, error: error.message };
     }
-    // Si es paciente, crear perfil en tabla pacientes
     if (rol === 'paciente' && data && data[0]) {
         await clienteSupabase
             .from('pacientes')
@@ -148,7 +153,6 @@ api.crearUsuarioGenerico = async (email, password, rol, nombre, apellido, dni, t
 api.actualizarUsuarioGenerico = async (idUsuario, datos) => {
     const campos = {};
     if (datos.email)    campos.email      = datos.email;
-    if (datos.password) campos.contrasenia = datos.password;
     if (datos.rol)      campos.rol        = datos.rol;
     if (datos.nombre)   campos.nombre     = datos.nombre;
     if (datos.apellido) campos.apellido   = datos.apellido;
@@ -161,6 +165,7 @@ api.actualizarUsuarioGenerico = async (idUsuario, datos) => {
     if (error) return { success: false, error: error.message };
     return { success: true };
 };
+
 // Eliminar cualquier usuario (y sus perfiles relacionados por CASCADE)
 api.eliminarUsuarioGenerico = async (idUsuario) => {
     const { error } = await clienteSupabase
@@ -170,3 +175,57 @@ api.eliminarUsuarioGenerico = async (idUsuario) => {
     if (error) return { success: false, error: error.message };
     return { success: true };
 };
+
+api.recuperarSesion = async () => {
+    const { data: sessionData } = await clienteSupabase.auth.getSession();
+    if (!sessionData?.session?.user) return { success: false };
+
+    const { data, error } = await clienteSupabase
+        .from('usuarios')
+        .select('*, medicos(*), pacientes(*)')
+        .eq('auth_id', sessionData.session.user.id)
+        .single();
+    if (error || !data) return { success: false };
+
+    const med = extraerPerfil(data.medicos);
+    const pac = extraerPerfil(data.pacientes);
+    let nombre = 'Sin', apellido = 'Nombre', especialidadId = null;
+    if (med && med.nombre) { nombre = med.nombre; apellido = med.apellido; especialidadId = med.id_especialidad; }
+    else if (pac && pac.nombre) { nombre = pac.nombre; apellido = pac.apellido; }
+    else if (data.nombre) { nombre = data.nombre; apellido = data.apellido || ''; }
+
+    let rolFrontend = data.rol.toUpperCase();
+    if (data.rol === 'medico') rolFrontend = 'DOCTOR';
+    if (data.rol === 'recepcionista') rolFrontend = 'RECEPCIONISTA';
+
+    return {
+        success: true,
+        usuario: {
+            id: data.id_usuario,
+            username: data.email,
+            rol: rolFrontend,
+            especialidadId,
+            dni: data.dni || '',
+            telefono: data.telefono || '',
+            nombreCompleto: `${nombre} ${apellido}`.trim(),
+            limiteTurnosDia: med?.limite_turnos_dia || 10
+        }
+    };
+};
+
+(async () => {
+  const res = await api.recuperarSesion();
+  if (!res.success) {
+    if (window.location.hash) window.location.hash = '';
+    mostrarPantallaInicio();
+    return;
+  }
+  estado.usuario = res.usuario;
+  estado.token = 'auth';
+  await cargarDatosIniciales();
+  if (!window.location.hash) {
+    window.location.hash = 'dashboard';
+  } else {
+    window.dispatchEvent(new Event('hashchange'));
+  }
+})();
