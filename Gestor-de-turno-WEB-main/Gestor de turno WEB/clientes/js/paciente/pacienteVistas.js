@@ -113,7 +113,7 @@ function renderNuevoTurno() {
       tag.id = styleId;
       tag.textContent = `
         .cal-dia-celda-paciente:hover { background: #f0faf7 !important; }
-        .cal-evento-paciente:hover { background: #20a878 !important; transform: scale(1.02); }
+        .cal-evento-paciente:hover { background: #2c6cb0 !important; transform: scale(1.02); }
       `;
       document.head.appendChild(tag);
     }

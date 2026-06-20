@@ -2,22 +2,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-deep:    #0f172a;   /* Fondo principal */
-  --bg-card:    #1e293b;   /* Fondo de tarjetas */
-  --bg-input:   #0f172a;   /* Fondo de inputs */
-  --border:     #334155;   /* Bordes sutiles */
-  --text-main:  #e2e8f0;   /* Texto principal */
-  --text-muted: #64748b;   /* Texto secundario */
-  --accent:     #3b82f6;   /* Azul principal */
-  --accent-h:   #2563eb;   /* Hover del azul */
+  --bg-deep:    #0f172a;   /* Fondo principal (modales/legacy) */
+  --bg-card:    #1e293b;   /* Fondo de tarjetas (modales/legacy) */
+  --bg-input:   #0f172a;   /* Fondo de inputs (modales/legacy) */
+  --border:     #334155;   /* Bordes sutiles (modales/legacy) */
+  --text-main:  #1f2937;   /* Texto principal — oscuro para fondo claro */
+  --text-muted: #5a6470;   /* Texto secundario — oscuro para fondo claro */
+  --accent:     #378ADD;   /* Azul principal */
+  --accent-h:   #2c6cb0;   /* Hover del azul */
   --success:    #059669;
   --danger:     #dc2626;
   --warning:    #f59e0b;
 }
 
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: var(--bg-deep);
+  font-family: 'Hanken Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #F0F6FC;
   color: var(--text-main);
   min-height: 100vh;
 }
@@ -90,3 +90,88 @@ tr:hover td { background: rgba(30, 41, 59, 0.4); }
 .branch-card.selected { border-color: var(--selected-color, var(--accent)); }
 .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .auth-box { width: 100%; max-width: 420px; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   MEJORA VISUAL GLOBAL — Tipografía + pulido general (no afecta lógica)
+   ══════════════════════════════════════════════════════════════════════ */
+
+body, input, select, textarea, button {
+  font-family: 'Hanken Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Suaviza cualquier card/tarjeta usada en estilos inline */
+.card, [class*="card"] {
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* Botones con leve elevación y transición pareja en toda la app */
+button, .btn {
+  font-family: 'Hanken Grotesk', 'Segoe UI', system-ui, sans-serif;
+  transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+button:hover, .btn:hover {
+  filter: brightness(1.04);
+}
+button:active, .btn:active {
+  transform: scale(0.97);
+}
+
+/* Inputs y selects más prolijos en cualquier formulario inline */
+input, select, textarea {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(40, 199, 142, 0.15);
+}
+
+/* Tablas: filas con hover suave sin importar el tema usado */
+table tr {
+  transition: background 0.15s ease;
+}
+
+/* Scrollbar consistente en toda la app, sin importar el fondo */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.55); }
+
+/* Sidebar: ítems de navegación con transición más suave */
+.nav-item, [class*="sidebar"] div[onclick] {
+  transition: background 0.18s ease, color 0.18s ease, padding-left 0.18s ease;
+}
+
+/* Badges con mejor contraste tipográfico */
+.badge, [style*="border-radius:20px"], [style*="border-radius: 20px"] {
+  letter-spacing: 0.02em;
+}
+
+/* Modales con entrada suave */
+.modal-overlay, [id^="modal-"] {
+  animation: fadeIn 0.2s ease;
+}
+
+/* Links de acción (water-link) con subrayado animado prolijo */
+.water-link {
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.18s ease, opacity 0.18s ease;
+}
+.water-link:hover {
+  border-bottom-color: currentColor;
+  opacity: 0.85;
+}
+
+/* Imagen/ícono de carga de página: transición de entrada pareja */
+#main-content, #root {
+  animation: fadeIn 0.25s ease;
+}

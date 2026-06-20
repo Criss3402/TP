@@ -168,7 +168,7 @@ function renderAgenda() {
     const tag = document.createElement('style');
     tag.id = styleId;
     tag.textContent = `
-      .cal-dia-celda:hover { background: #f0faf7 !important; }
+      .cal-dia-celda:hover { background: #eef5fc !important; }
       .cal-evento-bloque:hover { opacity: 0.85; transform: scale(1.02); }
     `;
     document.head.appendChild(tag);
@@ -245,9 +245,9 @@ function renderGestionMedicos() {
           <tr style="border-bottom: 1px solid ${COLOR_MINT.mintLight}44;">
             <td style="padding:14px 12px; color:${COLOR_MINT.emeraldDark};"><strong>${u.nombreCompleto}</strong></td>
             <td style="padding:14px 12px; color:${COLOR_MINT.lightGray};">${u.username}</td>
-            <td style="padding:14px 12px;">${esp ? esp.nombre : '—'}</td>
-            <td style="padding:14px 12px;">${u.matricula || '—'}</td>
-            <td style="padding:14px 12px;">${u.dni || '—'}</td>
+            <td style="padding:14px 12px; color:#1f2937;">${esp ? esp.nombre : '—'}</td>
+            <td style="padding:14px 12px; color:#1f2937;">${u.matricula || '—'}</td>
+            <td style="padding:14px 12px; color:#1f2937;">${u.dni || '—'}</td>
             <td style="padding:14px 12px; text-align:right; display:flex; gap:6px; justify-content:flex-end;">
               <button class="btn btn-ghost" style="border:1px solid ${COLOR_MINT.mintLight}; color:${COLOR_MINT.emeraldDark}; font-size:12px; padding:6px 12px; font-weight:600;" onclick="abrirFormEditarMedico(${u.id})">✏️ Editar</button>
               <button class="btn" style="border:1px solid #dc2626; color:#dc2626; font-size:12px; padding:6px 12px; font-weight:600; background:transparent; border-radius:4px; cursor:pointer;" onclick="eliminarMedico(${u.id}, '${u.nombreCompleto}')">🗑️ Eliminar</button>
@@ -345,8 +345,8 @@ async function renderGestionPacientes() {
           <tr style="border-bottom:1px solid ${COLOR_MINT.mintLight}44; ${p.suspendido ? 'background:#fff9f9;' : ''}">
             <td style="padding:14px 12px; color:${COLOR_MINT.emeraldDark};"><strong>${p.nombreCompleto}</strong></td>
             <td style="padding:14px 12px; color:${COLOR_MINT.lightGray};">${p.email}</td>
-            <td style="padding:14px 12px;">${p.dni}</td>
-            <td style="padding:14px 12px;">${p.ausencias}/3</td>
+            <td style="padding:14px 12px; color:#1f2937;">${p.dni}</td>
+            <td style="padding:14px 12px; color:#1f2937;">${p.ausencias}/3</td>
             <td style="padding:14px 12px;">${badgeSuspension}</td>
             <td style="padding:14px 12px; text-align:right; display:flex; gap:6px; justify-content:flex-end;">
               <button class="btn btn-ghost" style="border:1px solid ${COLOR_MINT.mintLight}; color:${COLOR_MINT.emeraldDark}; font-size:12px; padding:6px 12px; font-weight:600;" onclick="abrirTurnoParaPaciente(${p.id}, '${p.nombreCompleto}')">📅 Agendar</button>

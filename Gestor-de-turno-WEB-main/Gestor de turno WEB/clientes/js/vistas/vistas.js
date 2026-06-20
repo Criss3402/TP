@@ -1,12 +1,16 @@
 // Definición de variables de color globales
 const COLOR_MINT = {
   whiteGlass: 'rgba(255, 255, 255, 0.85)',
-  vibrantMint: '#28C78E',
-  emeraldDark: '#18564B',
-  mintLight: '#8CD3BA',
-  waterGreen: '#5FABA0',
-  lightGray: '#7F8C8D',
-  bgTint: '#F0F9F6'
+  vibrantMint: '#378ADD',
+  emeraldDark: '#0C447C',
+  mintLight: '#85B7EB',
+  waterGreen: '#185FA5',
+  lightGray: '#5A6470',
+  bgTint: '#F0F6FC',
+  coral: '#D85A30',
+  coralDark: '#993C1D',
+  coralLight: '#F0997B',
+  coralBg: '#FAECE7'
 };
 
 // BLOQUE PARA FORZAR EL DISEÑO MINT SOBRE EL CSS VIEJO
@@ -136,7 +140,7 @@ const estilosLoginComunes = `
       letter-spacing: 0.5px;
       transition: background 0.2s ease;
     }
-    .btn-mint-submit:hover { background-color: #20a878 !important; }
+    .btn-mint-submit:hover { background-color: #2c6cb0 !important; }
     
     .water-link { color: ${COLOR_MINT.waterGreen}; font-size: 13px; text-decoration: none; font-weight: 600; cursor: pointer; }
     .water-link:hover { text-decoration: underline; }
@@ -162,30 +166,71 @@ function mostrarPantallaInicio() {
 
 function mostrarLogin(errorMsg = '') {
   renderizar(`
-    ${estilosLoginComunes}
-    <div class="auth-background">
-      <div class="glass-box" style="max-width: 420px;">
-        <div style="text-align:center; margin-bottom:30px;">
-          <div style="font-size: 42px; margin-bottom: 10px;">🏥</div>
-          <h1 class="text-emerald-main" style="font-size: 28px; letter-spacing: -0.5px; margin: 0;">Hospital Central</h1>
-          <p style="color: ${COLOR_MINT.lightGray}; margin-top: 8px; font-size: 14px;">Sistema de gestión de turnos médicos</p>
+    <style>
+      body, html { background-color: #ffffff !important; }
+      .login-split { display:flex; min-height:100vh; font-family:'Hanken Grotesk', system-ui, sans-serif; }
+      .login-panel-brand {
+        flex:1; background:${COLOR_MINT.emeraldDark}; padding:48px;
+        display:flex; flex-direction:column; justify-content:space-between; color:white;
+        min-width:0;
+      }
+      .login-panel-form {
+        flex:1; background:white; padding:48px; display:flex; flex-direction:column;
+        justify-content:center; align-items:center; min-width:0;
+      }
+      .login-form-inner { width:100%; max-width:380px; }
+      .login-input-wrap { margin-bottom:18px; }
+      .login-input-wrap label { display:block; font-size:13px; font-weight:600; color:${COLOR_MINT.emeraldDark}; margin-bottom:6px; }
+      .login-input-wrap input {
+        width:100%; padding:11px 14px; border:1px solid ${COLOR_MINT.mintLight}; border-radius:8px;
+        font-size:14px; color:#1f2937; background:white; box-sizing:border-box;
+      }
+      .login-input-wrap input:focus {
+        outline:none; border-color:${COLOR_MINT.vibrantMint};
+        box-shadow:0 0 0 3px rgba(55, 138, 221, 0.15);
+      }
+      .login-submit-btn {
+        width:100%; padding:13px; background:${COLOR_MINT.vibrantMint}; color:white; border:none;
+        border-radius:8px; font-weight:700; font-size:15px; cursor:pointer; transition:filter 0.15s;
+      }
+      .login-submit-btn:hover { filter:brightness(1.05); }
+      @media (max-width:760px) {
+        .login-panel-brand { display:none; }
+      }
+    </style>
+    <div class="login-split">
+      <div class="login-panel-brand">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:38px; height:38px; border-radius:8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:20px;">🏥</div>
+          <span style="font-weight:700; font-size:17px;">Hospital Central</span>
         </div>
         <div>
-          <div class="field">
-            <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Correo Electrónico</label>
-            <input id="login-user" class="input mint-input" placeholder="Ej: usuario@correo.com" onkeydown="if(event.key==='Enter') ejecutarLogin()" />
+          <h2 style="font-size:30px; font-weight:700; margin:0 0 14px; line-height:1.3;">Gestión de turnos, simple y clara.</h2>
+          <p style="font-size:14px; color:rgba(255,255,255,0.75); margin:0; line-height:1.6;">Turnos, agendas, profesionales y pacientes en un solo lugar.</p>
+        </div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.5);">© 2026 Hospital Central — Sistema de gestión</div>
+      </div>
+      <div class="login-panel-form">
+        <div class="login-form-inner">
+          <p style="font-size:12px; color:${COLOR_MINT.coral}; font-weight:700; letter-spacing:0.05em; margin:0 0 8px; text-transform:uppercase;">Acceso al sistema</p>
+          <h3 style="font-size:24px; font-weight:700; margin:0 0 8px; color:${COLOR_MINT.emeraldDark};">Iniciá sesión</h3>
+          <p style="font-size:14px; color:${COLOR_MINT.lightGray}; margin:0 0 28px;">Ingresá con tu cuenta para administrar el sistema.</p>
+
+          <div class="login-input-wrap">
+            <label>Correo electrónico</label>
+            <input id="login-user" placeholder="usuario@correo.com" onkeydown="if(event.key==='Enter') ejecutarLogin()" />
           </div>
-          <div class="field" style="margin-top:15px;">
-            <label style="color: ${COLOR_MINT.emeraldDuted}; font-weight: 600; font-size: 13px; color: ${COLOR_MINT.emeraldDark};">Contraseña</label>
-            <input id="login-pass" class="input mint-input" type="password" placeholder="Ingrese su contraseña" onkeydown="if(event.key==='Enter') ejecutarLogin()" />
+          <div class="login-input-wrap" style="margin-bottom:8px;">
+            <label>Contraseña</label>
+            <input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter') ejecutarLogin()" />
           </div>
-          ${errorMsg ? `<p style="color:#dc2626; font-size:13px; margin: 10px 0 0 0;">⚠️ ${errorMsg}</p>` : ''}
-          <div style="margin: 20px 0 15px 0;">
-            <button class="btn-mint-submit" onclick="ejecutarLogin()">Iniciar Sesión</button>
-          </div>
-          <div style="display:flex; justify-content:center; gap:20px; margin-top:10px;">
-            <span class="water-link" onclick="mostrarRegistro()">Crear cuenta nueva</span>
-          </div>
+          ${errorMsg ? `<p style="color:#dc2626; font-size:13px; margin:8px 0 16px;">⚠️ ${errorMsg}</p>` : `<div style="margin-bottom:20px;"></div>`}
+
+          <button class="login-submit-btn" onclick="ejecutarLogin()">Iniciar sesión →</button>
+
+          <p style="text-align:center; font-size:13px; color:${COLOR_MINT.lightGray}; margin-top:18px;">
+            ¿No tenés cuenta? <span class="water-link" style="color:${COLOR_MINT.vibrantMint}; font-weight:700;" onclick="mostrarRegistro()">Crear cuenta nueva</span>
+          </p>
         </div>
       </div>
     </div>
@@ -310,21 +355,31 @@ function htmlSidebar(seccionActiva) {
   if (usuario.rol === 'ADMIN')          items = [...items, ...itemsAdmin];
 
   const navHTML = items.map(item => `
-    <div class="nav-item ${seccionActiva === item.id ? 'active' : ''}" style="${seccionActiva === item.id ? `background: ${COLOR_MINT.bgTint}; color: ${COLOR_MINT.emeraldDark}; border-left: 4px solid ${COLOR_MINT.vibrantMint};` : ''}" onclick="navegarA('${item.id}')">
-      <span style="font-weight: 600;">${item.label}</span>
+    <div class="nav-item" style="
+      ${seccionActiva === item.id
+        ? `background: rgba(255,255,255,0.12); color: #ffffff; border-left: 3px solid ${COLOR_MINT.coral}; font-weight:700;`
+        : `color: rgba(255,255,255,0.65); border-left: 3px solid transparent; font-weight:500;`}
+      padding: 11px 14px; border-radius: 8px; margin-bottom: 2px; cursor:pointer; display:flex; align-items:center; gap:8px; transition: background 0.15s, color 0.15s;
+    " onmouseover="if(!this.classList.contains('active-fixed')) this.style.background='rgba(255,255,255,0.08)'; this.style.color='#ffffff';"
+       onmouseout="${seccionActiva === item.id ? `this.style.background='rgba(255,255,255,0.12)'; this.style.color='#ffffff';` : `this.style.background='transparent'; this.style.color='rgba(255,255,255,0.65)';`}"
+       onclick="navegarA('${item.id}')">
+      <span style="font-size:14px;">${item.label}</span>
     </div>
   `).join('');
 
   return `
-    <div id="sidebar" style="background-color: ${COLOR_MINT.emeraldDark}; color: #fff;">
-      <div class="sidebar-header" style="border-bottom: 1px solid ${COLOR_MINT.mintLight}33;">
-        <div style="font-weight:800; font-size:18px; color:#fff;">Hospital Central</div>
-        <div style="font-size:12px; color:${COLOR_MINT.mintLight}; margin-top:2px;">${usuario.nombreCompleto}</div>
+    <div id="sidebar" style="background-color: ${COLOR_MINT.emeraldDark}; color: #fff; padding: 24px 14px; display:flex; flex-direction:column;">
+      <div class="sidebar-header" style="border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom:18px; margin-bottom: 16px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;">🏥</div>
+          <div style="font-weight:700; font-size:16px; color:#fff; line-height:1.2;">Hospital Central</div>
+        </div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:10px;">${usuario.nombreCompleto}</div>
         <div style="margin-top:8px;">${badgeRol(usuario.rol)}</div>
       </div>
-      <nav style="flex:1; margin-top: 15px;">${navHTML}</nav>
-      
-      <button class="btn" style="width:100%; margin-top:16px; padding: 12px; background-color: #ef4444; border: 1px solid #dc2626; color: white; font-weight: 700; border-radius: 6px; cursor: pointer;" onclick="cerrarSesion()">Cerrar sesión</button>
+      <nav style="flex:1;">${navHTML}</nav>
+
+      <button class="btn" style="width:100%; margin-top:16px; padding: 11px; background-color: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; font-weight: 600; border-radius: 8px; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='${COLOR_MINT.coral}'; this.style.borderColor='${COLOR_MINT.coral}';" onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.15)';" onclick="cerrarSesion()">Cerrar sesión</button>
     </div>
   `;
 }
@@ -407,10 +462,10 @@ function renderMisTurnos() {
       const nombreColumnaExtra = usuario.rol === 'PACIENTE' ? t.doctorNombre : t.pacienteNombre;
       return `
         <tr>
-          <td><strong>T-${String(t.id).padStart(4, '0')}</strong></td>
-          <td>${t.fecha} | ${t.hora} hs</td>
-          <td>${esp ? esp.nombre : '—'}</td>
-          <td>${nombreColumnaExtra}</td>
+          <td style="color:#1f2937;"><strong>T-${String(t.id).padStart(4, '0')}</strong></td>
+          <td style="color:#1f2937;">${t.fecha} | ${t.hora} hs</td>
+          <td style="color:#1f2937;">${esp ? esp.nombre : '—'}</td>
+          <td style="color:#1f2937;">${nombreColumnaExtra}</td>
           <td>${badgeEstado(t.estado)}</td>
           <td style="text-align:center;">
             ${usuario.rol === 'DOCTOR' && (t.estado === 'Solicitado' || t.estado === 'Confirmado')

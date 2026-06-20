@@ -81,7 +81,7 @@ const api = {
     const adaptadas = data.map(esp => ({ 
         id: esp.id_especialidad, 
         nombre: esp.nombre, 
-        color: esp.color || '#28C78E',
+        color: esp.color || '#378ADD',
         icono: '🩺' 
     }));
     return { success: true, data: adaptadas };
