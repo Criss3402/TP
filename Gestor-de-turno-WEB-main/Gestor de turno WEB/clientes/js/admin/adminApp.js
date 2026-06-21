@@ -395,6 +395,10 @@ function calcularEstadisticas(todo = false) {
   const totalTurnos     = turnos.length;
   const totalPacientes  = new Set(turnos.map(t => t.pacienteNombre)).size;
   const totalMedicos    = estado.usuarios.filter(u => u.rol === 'DOCTOR').length;
+  const turnosIds = new Set(turnos.map(t => t.id));
+  const pagosFiltrados = (estado.pagos || []).filter(p => turnosIds.has(p.turnoId));
+  const totalRecaudado = pagosFiltrados.filter(p => p.estado === 'Pagado').reduce((sum, p) => sum + Number(p.monto), 0);
+  const totalPendienteCobro = pagosFiltrados.filter(p => p.estado === 'Pendiente').reduce((sum, p) => sum + Number(p.monto), 0);
 
   // Conteo por estado
   const porEstado = {
@@ -497,6 +501,10 @@ function calcularEstadisticas(todo = false) {
       <div class="card" style="background:white; border-left:4px solid #f59e0b; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
         <div style="font-size:20px; font-weight:800; color:#f59e0b;">${espMasDemandada ? espMasDemandada[0] : '—'}</div>
         <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:4px;">🏆 Especialidad más demandada</div>
+      </div>
+      <div class="card" style="background:white; border-left:4px solid #16a34a; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+        <div style="font-size:28px; font-weight:800; color:#16a34a;">$${totalRecaudado.toLocaleString('es-AR')}</div>
+        <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:4px;">💰 Total Recaudado</div>
       </div>
     </div>
 
