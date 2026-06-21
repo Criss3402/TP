@@ -228,8 +228,72 @@ function renderAgenda() {
 }
 
 // Vistas en desarrollo adaptadas al nuevo diseño
-function renderPagos() { renderizar(`<div id="app-layout">${htmlSidebar('pagos')}<div id="main-content" class="fade-in" style="background-color:${COLOR_MINT.bgTint}; min-height: 100vh;"><h1 class="page-title" style="color:${COLOR_MINT.emeraldDark};">Gestión de Pagos</h1><div class="card" style="background:white; border: 1px solid ${COLOR_MINT.mintLight}; border-left: 4px solid ${COLOR_MINT.vibrantMint}; box-shadow: 0 4px 12px rgba(0,0,0,0.02);"><h3 style="color:${COLOR_MINT.emeraldDark}; font-weight: 700; margin-bottom:10px;">Módulo en desarrollo</h3><p style="color: ${COLOR_MINT.lightGray};">Aquí se integrará el control y auditoría de aranceles de consultas médicas.</p></div></div></div>`); }
+function renderPagos() {
+  const pagos = estado.pagos || [];
+  const totalRecaudado = pagos.filter(p => p.estado === 'Pagado').reduce((sum, p) => sum + Number(p.monto), 0);
+  const totalPendiente = pagos.filter(p => p.estado === 'Pendiente').reduce((sum, p) => sum + Number(p.monto), 0);
+
+  const filasHTML = pagos.length === 0
+    ? `<tr><td colspan="6" style="text-align:center; padding:30px; color:${COLOR_MINT.lightGray};">No hay pagos registrados.</td></tr>`
+    : pagos.map(p => {
+        const badge = p.estado === 'Pagado'
+          ? `<span style="background:#dcfce7; color:#16a34a; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; border:1px solid #86efac;">✅ Pagado</span>`
+          : `<span style="background:#fef3c7; color:#b45309; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; border:1px solid #fde68a;">⏳ Pendiente</span>`;
+        return `
+          <tr style="border-bottom:1px solid ${COLOR_MINT.mintLight}44;">
+            <td style="padding:14px 12px; color:#1f2937;"><strong>T-${String(p.turnoId).padStart(4, '0')}</strong></td>
+            <td style="padding:14px 12px; color:#1f2937;">${p.pacienteNombre}</td>
+            <td style="padding:14px 12px; color:#1f2937;">${p.doctorNombre}</td>
+            <td style="padding:14px 12px; color:#1f2937;">$${Number(p.monto).toLocaleString('es-AR')}</td>
+            <td style="padding:14px 12px; color:#1f2937;">${p.metodo}</td>
+            <td style="padding:14px 12px;">${badge}</td>
+          </tr>
+        `;
+      }).join('');
+
+  renderizar(`
+    <div id="app-layout">${htmlSidebar('pagos')}<div id="main-content" class="fade-in" style="background-color:${COLOR_MINT.bgTint}; min-height:100vh;">
+      <h1 class="page-title" style="color:${COLOR_MINT.emeraldDark};">💳 Gestión de Pagos</h1>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
+        <div class="card" style="background:white; border-left:4px solid #16a34a; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+          <div style="font-size:28px; font-weight:800; color:#16a34a;">$${totalRecaudado.toLocaleString('es-AR')}</div>
+          <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:4px;">✅ Total Recaudado</div>
+        </div>
+        <div class="card" style="background:white; border-left:4px solid #b45309; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+          <div style="font-size:28px; font-weight:800; color:#b45309;">$${totalPendiente.toLocaleString('es-AR')}</div>
+          <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:4px;">⏳ Total Pendiente</div>
+        </div>
+        <div class="card" style="background:white; border-left:4px solid ${COLOR_MINT.vibrantMint}; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+          <div style="font-size:28px; font-weight:800; color:${COLOR_MINT.vibrantMint};">${pagos.length}</div>
+          <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:4px;">📋 Total de Operaciones</div>
+        </div>
+      </div>
+
+      <div class="card" style="background:white; border:1px solid ${COLOR_MINT.mintLight}; border-top:4px solid ${COLOR_MINT.emeraldDark}; border-radius:8px; padding:0; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+        <div class="table-wrapper" style="margin:0;">
+          <table style="width:100%; border-collapse:collapse; margin:0;">
+            <thead>
+              <tr style="background-color:${COLOR_MINT.emeraldDark}; color:white; text-align:left;">
+                <th style="padding:16px 12px;">Turno</th>
+                <th style="padding:16px 12px;">Paciente</th>
+                <th style="padding:16px 12px;">Médico</th>
+                <th style="padding:16px 12px;">Monto</th>
+                <th style="padding:16px 12px;">Método</th>
+                <th style="padding:16px 12px;">Estado</th>
+              </tr>
+            </thead>
+            <tbody>${filasHTML}</tbody>
+          </table>
+        </div>
+      </div>
+    </div></div>
+  `);
+}
+
 function renderSuspensiones() { renderizar(`<div id="app-layout">${htmlSidebar('suspensiones')}<div id="main-content" class="fade-in" style="background-color:${COLOR_MINT.bgTint}; min-height: 100vh;"><h1 class="page-title" style="color:${COLOR_MINT.emeraldDark};">Gestión de Suspensiones</h1><div class="card" style="background:white; border: 1px solid ${COLOR_MINT.mintLight}; border-left: 4px solid ${COLOR_MINT.vibrantMint}; box-shadow: 0 4px 12px rgba(0,0,0,0.02);"><h3 style="color:${COLOR_MINT.emeraldDark}; font-weight: 700; margin-bottom:10px;">Módulo en desarrollo</h3><p style="color: ${COLOR_MINT.lightGray};">Control automático de inasistencias acumuladas y bloqueos preventivos.</p></div></div></div>`); }
+
+
 // ── GESTIÓN DE MÉDICOS (compartida entre Admin y Recepcionista) ──────────
 function renderGestionMedicos() {
   const { usuarios, especialidades } = estado;

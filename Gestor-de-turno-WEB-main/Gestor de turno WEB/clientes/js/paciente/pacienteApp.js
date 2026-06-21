@@ -51,10 +51,14 @@ async function confirmarTurno() {
   if (respuesta.success) {
     notificar('✅ Turno solicitado con éxito en la nube.');
     
-    // 4. Si se guardó, descargamos la lista de turnos fresca para que aparezca
+   // 4. Si se guardó, descargamos la lista de turnos y pagos frescos para que aparezca
     const resTurnos = await api.getTurnos();
     if (resTurnos.success) {
         estado.turnos = resTurnos.data;
+    }
+    const resPagos = await api.getPagos();
+    if (resPagos.success) {
+        estado.pagos = resPagos.data;
     }
 
     // 5. Limpiamos la memoria temporal y lo mandamos a su panel de turnos
@@ -129,4 +133,43 @@ function abrirModalConfirmacion() {
 async function confirmarTurnoDesdeModal() {
   document.getElementById('modal-confirm-turno').remove();
   await confirmarTurno();
+}
+
+function abrirModalPago(idTurno) {
+  const modal = document.createElement('div');
+  modal.id = 'modal-pago';
+  modal.style.cssText = `position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;`;
+  modal.innerHTML = `
+    <div style="background:white; border-radius:12px; padding:32px; max-width:420px; width:90%; box-shadow:0 20px 40px rgba(0,0,0,0.2); text-align:center;">
+      <div style="font-size:42px; margin-bottom:12px;">💳</div>
+      <h3 style="color:${COLOR_MINT.emeraldDark}; font-weight:700; margin:0 0 8px 0; font-size:20px;">Pagar Turno</h3>
+      <p style="color:${COLOR_MINT.lightGray}; font-size:14px; margin-bottom:20px;">Monto a pagar: <strong style="color:${COLOR_MINT.coral}; font-size:18px;">$5.000</strong></p>
+      <div style="text-align:left; margin-bottom:24px;">
+        <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size:13px;">Método de pago</label>
+        <select id="modal-metodo-pago" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333; width:100%; margin-top:6px;">
+          <option value="Efectivo">💵 Efectivo</option>
+          <option value="Tarjeta">💳 Tarjeta de crédito/débito</option>
+          <option value="Transferencia">🏦 Transferencia bancaria</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-ghost" style="flex:1; border:1px solid ${COLOR_MINT.mintLight}; color:${COLOR_MINT.lightGray};" onclick="document.getElementById('modal-pago').remove()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:2; background-color:${COLOR_MINT.coral}; border-color:${COLOR_MINT.coral}; font-weight:700;" onclick="confirmarPago(${idTurno})">Confirmar Pago</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function confirmarPago(idTurno) {
+  const metodo = document.getElementById('modal-metodo-pago').value;
+  const respuesta = await api.pagarTurno(idTurno, metodo);
+  if (!respuesta.success) { notificar('❌ ' + respuesta.error, 'error'); return; }
+
+  document.getElementById('modal-pago').remove();
+  notificar('✅ Pago registrado correctamente.');
+
+  const resPagos = await api.getPagos();
+  if (resPagos.success) estado.pagos = resPagos.data;
+  renderMisTurnos();
 }

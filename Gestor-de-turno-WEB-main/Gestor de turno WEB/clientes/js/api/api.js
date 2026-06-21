@@ -5,6 +5,7 @@ const estado = {
   turnos: [],
   usuarios: [],
   agendas: [],
+  pagos: [],
   calendario: { mesActual: new Date().getMonth(), anioActual: new Date().getFullYear() },
   nuevoTurno: { paso: 1, especialidadId: null, doctorId: null, fecha: '', hora: '' }
 };
@@ -243,7 +244,7 @@ const api = {
 },
 
   crearTurno: async (datosTurno) => {
-    const { error } = await clienteSupabase
+    const { data, error } = await clienteSupabase
       .from('turnos')
       .insert([
         {
@@ -253,14 +254,20 @@ const api = {
           hora: datosTurno.hora,
           estado: 'Solicitado'
         }
-      ]);
+      ])
+      .select();
 
     if (error) {
       console.error('Error al guardar turno:', error);
       return { success: false, error: 'Falló la conexión al agendar.' };
     }
+
+    if (data && data[0]) {
+      await api.crearPago(data[0].id_turno);
+    }
     return { success: true };
   },
+
 cambiarEstado: async (idTurno, nuevoEstado, diagnostico = null, indicaciones = null) => {
     const campos = { estado: nuevoEstado };
     if (diagnostico)  campos.diagnostico  = diagnostico;
@@ -388,7 +395,7 @@ api.actualizarEmailUsuario = async (idUsuario, email) => {
 
 // Crear turno desde recepcionista (en nombre de un paciente)
 api.crearTurnoRecepcionista = async (datosTurno) => {
-    const { error } = await clienteSupabase
+    const { data, error } = await clienteSupabase
         .from('turnos')
         .insert([{
             id_paciente: datosTurno.idPaciente,
@@ -396,8 +403,12 @@ api.crearTurnoRecepcionista = async (datosTurno) => {
             fecha:       datosTurno.fecha,
             hora:        datosTurno.hora,
             estado:      'Confirmado'
-        }]);
+        }])
+        .select();
     if (error) return { success: false, error: 'No se pudo crear el turno.' };
+    if (data && data[0]) {
+      await api.crearPago(data[0].id_turno);
+    }
     return { success: true };
 };
 
@@ -494,4 +505,56 @@ api.reactivarPaciente = async (idPaciente) => {
         .eq('id_paciente', idPaciente);
     if (error) return { success: false, error: error.message };
     return { success: true };
+};
+
+api.crearPago = async (idTurno) => {
+    const { error } = await clienteSupabase
+        .from('pagos')
+        .insert([{ id_turno: idTurno, monto: 5000, estado_pago: 'Pendiente' }]);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+};
+
+api.getPagos = async () => {
+    const { data, error } = await clienteSupabase
+        .from('pagos')
+        .select('*, turnos(*, pacientes(*), medicos(*))');
+    if (error) return { success: false, data: [] };
+
+    const adaptados = data.map(p => {
+        const turno = p.turnos;
+        const pac = turno?.pacientes;
+        const med = turno?.medicos;
+        return {
+            id: p.id_pago,
+            turnoId: p.id_turno,
+            monto: p.monto,
+            metodo: p.metodo || '—',
+            estado: p.estado_pago,
+            fechaPago: p.fecha_pago,
+            pacienteNombre: pac ? `${pac.nombre} ${pac.apellido}`.trim() : 'Sin asignar',
+            doctorNombre: med ? `${med.nombre} ${med.apellido}`.trim() : 'Sin asignar',
+            fechaTurno: turno?.fecha || ''
+        };
+    });
+    return { success: true, data: adaptados };
+};
+
+api.pagarTurno = async (idTurno, metodo) => {
+    const { error } = await clienteSupabase
+        .from('pagos')
+        .update({ estado_pago: 'Pagado', metodo, fecha_pago: new Date().toISOString() })
+        .eq('id_turno', idTurno);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+};
+
+api.getPagoPorTurno = async (idTurno) => {
+    const { data, error } = await clienteSupabase
+        .from('pagos')
+        .select('*')
+        .eq('id_turno', idTurno)
+        .maybeSingle();
+    if (error) return { success: false, data: null };
+    return { success: true, data };
 };

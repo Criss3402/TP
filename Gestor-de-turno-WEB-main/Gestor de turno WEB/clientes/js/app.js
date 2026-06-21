@@ -60,16 +60,18 @@ async function cerrarSesion() {
 }
 
 async function cargarDatosIniciales() {
-  const [resEsp, resTurnos, resUsr, resAgendas] = await Promise.all([
+  const [resEsp, resTurnos, resUsr, resAgendas, resPagos] = await Promise.all([
     api.getEspecialidades(),
     api.getTurnos(),
     api.getUsuarios(),
-    api.getAgendas()
+    api.getAgendas(),
+    api.getPagos()
   ]);
   if (resEsp.success)     estado.especialidades = resEsp.data;
   if (resTurnos.success)  estado.turnos         = resTurnos.data;
   if (resUsr.success)     estado.usuarios       = resUsr.data;
   if (resAgendas.success) estado.agendas        = resAgendas.data;
+  if (resPagos.success)   estado.pagos          = resPagos.data;
 }
 
 function navegarA(seccion) {

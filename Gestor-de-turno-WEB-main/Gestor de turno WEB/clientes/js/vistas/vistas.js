@@ -455,11 +455,22 @@ function renderMisTurnos() {
   let filasHTML = '';
   
   if (turnosVisibles.length === 0) {
-    filasHTML = '<tr><td colspan="6" style="text-align:center; padding: 30px; color: var(--text-muted);">No hay turnos registrados en el sistema.</td></tr>';
+    filasHTML = '<tr><td colspan="7" style="text-align:center; padding: 30px; color: var(--text-muted);">No hay turnos registrados en el sistema.</td></tr>';
   } else {
     filasHTML = turnosVisibles.map(t => {
       const esp = estado.especialidades.find(e => e.id == t.especialidadId);
       const nombreColumnaExtra = usuario.rol === 'PACIENTE' ? t.doctorNombre : t.pacienteNombre;
+      const pago = estado.pagos ? estado.pagos.find(p => p.turnoId == t.id) : null;
+      const badgePago = !pago
+        ? `<span style="color:${COLOR_MINT.lightGray}; font-size:12px;">—</span>`
+        : pago.estado === 'Pagado'
+          ? `<span style="background:#dcfce7; color:#16a34a; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; border:1px solid #86efac;">✅ Pagado</span>`
+          : `<span style="background:#fef3c7; color:#b45309; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; border:1px solid #fde68a;">⏳ Pendiente</span>`;
+
+      const botonPagar = (usuario.rol === 'PACIENTE' && pago && pago.estado === 'Pendiente' && t.estado !== 'Cancelado')
+        ? `<button class="btn" style="font-size:11px; padding:4px 8px; background-color:${COLOR_MINT.coral}; border:1px solid ${COLOR_MINT.coral}; color:white; border-radius:4px; cursor:pointer; font-weight:600; margin-left:6px;" onclick="abrirModalPago(${t.id})">💳 Pagar</button>`
+        : '';
+
       return `
         <tr>
           <td style="color:#1f2937;"><strong>T-${String(t.id).padStart(4, '0')}</strong></td>
@@ -467,6 +478,7 @@ function renderMisTurnos() {
           <td style="color:#1f2937;">${esp ? esp.nombre : '—'}</td>
           <td style="color:#1f2937;">${nombreColumnaExtra}</td>
           <td>${badgeEstado(t.estado)}</td>
+          <td>${badgePago}${botonPagar}</td>
           <td style="text-align:center;">
             ${usuario.rol === 'DOCTOR' && (t.estado === 'Solicitado' || t.estado === 'Confirmado')
   ? `<div style="display:flex; gap:6px; justify-content:center;">
@@ -494,7 +506,7 @@ function renderMisTurnos() {
           <table>
             <thead>
               <tr style="background-color: ${COLOR_MINT.emeraldDark}; color: white;">
-                <th>Código</th><th>Fecha y Hora</th><th>Especialidad</th><th>${usuario.rol === 'PACIENTE' ? 'Profesional' : 'Paciente'}</th><th>Estado</th><th style="text-align:center;">Acción</th>
+                <th>Código</th><th>Fecha y Hora</th><th>Especialidad</th><th>${usuario.rol === 'PACIENTE' ? 'Profesional' : 'Paciente'}</th><th>Estado</th><th>Pago</th><th style="text-align:center;">Acción</th>
               </tr>
             </thead>
             <tbody>${filasHTML}</tbody>
