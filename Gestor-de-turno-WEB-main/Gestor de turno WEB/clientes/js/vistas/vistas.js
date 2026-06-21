@@ -202,10 +202,10 @@ function mostrarLogin(errorMsg = '') {
       <div class="login-panel-brand">
         <div style="display:flex; align-items:center; gap:10px;">
           <div style="width:38px; height:38px; border-radius:8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:20px;">🏥</div>
-          <span style="font-weight:700; font-size:17px;">Hospital Central</span>
+          <span style="font-weight:700; font-size:17px;">Hospital General del Litoral</span>
         </div>
         <div>
-          <h2 style="font-size:30px; font-weight:700; margin:0 0 14px; line-height:1.3;">Gestión de turnos, simple y clara.</h2>
+          <h2 style="font-size:30px; font-weight:700; margin:0 0 14px; line-height:1.3;">Hospital General del Litoral.</h2>
           <p style="font-size:14px; color:rgba(255,255,255,0.75); margin:0; line-height:1.6;">Turnos, agendas, profesionales y pacientes en un solo lugar.</p>
         </div>
         <div style="font-size:12px; color:rgba(255,255,255,0.5);">© 2026 Hospital Central — Sistema de gestión</div>
@@ -425,8 +425,79 @@ async function renderDashboard() {
     }
   }
 
+  let htmlAdminCards = '';
+  if (usuario.rol === 'ADMIN') {
+    const totalPacientes = estado.usuarios.filter(u => u.rol === 'PACIENTE').length;
+    const totalMedicos = estado.usuarios.filter(u => u.rol === 'DOCTOR').length;
+    const pacientesSuspendidosRes = await api.getPacientes();
+    const totalSuspendidos = pacientesSuspendidosRes.success
+      ? pacientesSuspendidosRes.data.filter(p => p.suspendido).length
+      : 0;
+    const totalRecaudado = (estado.pagos || [])
+      .filter(p => p.estado === 'Pagado')
+      .reduce((sum, p) => sum + Number(p.monto), 0);
+
+    htmlAdminCards = `
+      <div class="grid-stats" style="margin-bottom: 25px; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px;">
+        <div class="card" style="border-left:4px solid ${COLOR_MINT.emeraldDark}; background: white;">
+          <div style="font-size:28px; font-weight:800; color:${COLOR_MINT.emeraldDark};">${totalPacientes}</div>
+          <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:5px;">👥 Total Pacientes</div>
+        </div>
+        <div class="card" style="border-left:4px solid ${COLOR_MINT.vibrantMint}; background: white;">
+          <div style="font-size:28px; font-weight:800; color:${COLOR_MINT.vibrantMint};">${totalMedicos}</div>
+          <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:5px;">👨‍⚕️ Total Médicos</div>
+        </div>
+        <div class="card" style="border-left:4px solid #dc2626; background: white;">
+          <div style="font-size:28px; font-weight:800; color:#dc2626;">${totalSuspendidos}</div>
+          <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:5px;">🚫 Pacientes Suspendidos</div>
+        </div>
+        <div class="card" style="border-left:4px solid #16a34a; background: white;">
+          <div style="font-size:24px; font-weight:800; color:#16a34a;">$${totalRecaudado.toLocaleString('es-AR')}</div>
+          <div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:5px;">💰 Total Recaudado</div>
+        </div>
+      </div>
+    `;
+  }
+
   let htmlEspecialidades = '';
-  if (usuario.rol !== 'PACIENTE') {
+  if (usuario.rol === 'DOCTOR') {
+    const hoyStr = new Date().toISOString().split('T')[0];
+    const turnosDeHoy = turnosPermitidos.filter(t => t.fecha === hoyStr && (t.estado === 'Solicitado' || t.estado === 'Confirmado'));
+    const proximosTurnos = turnosPermitidos
+      .filter(t => t.estado === 'Solicitado' || t.estado === 'Confirmado')
+      .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora))
+      .slice(0, 3);
+
+    const especialidadPropia = especialidades.find(e => e.id == usuario.especialidadId);
+
+    const filasProximos = proximosTurnos.length === 0
+      ? `<p style="color:${COLOR_MINT.lightGray}; font-size:13px; margin:0;">No tenés turnos próximos.</p>`
+      : proximosTurnos.map(t => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid ${COLOR_MINT.mintLight}33;">
+            <div>
+              <div style="font-weight:600; color:${COLOR_MINT.emeraldDark}; font-size:14px;">${t.pacienteNombre}</div>
+              <div style="color:${COLOR_MINT.lightGray}; font-size:12px;">${t.fecha} · ${t.hora} hs</div>
+            </div>
+            ${badgeEstado(t.estado)}
+          </div>
+        `).join('');
+
+    htmlEspecialidades = `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="card" style="background: white; border: 1px solid ${COLOR_MINT.mintLight};">
+          <h3 style="font-weight:700; margin-bottom:12px; color: ${COLOR_MINT.emeraldDark};">🩺 Tu Especialidad</h3>
+          <div style="background:${COLOR_MINT.bgTint}; border:1px solid ${COLOR_MINT.mintLight}44; border-radius:10px; padding:16px; margin-bottom:14px;">
+            <span style="font-size:16px; font-weight:700; color:${COLOR_MINT.emeraldDark};">${especialidadPropia ? especialidadPropia.nombre : 'Sin asignar'}</span>
+          </div>
+          <div style="font-size:13px; color:${COLOR_MINT.lightGray};">Turnos para hoy: <strong style="color:${COLOR_MINT.vibrantMint};">${turnosDeHoy.length}</strong></div>
+        </div>
+        <div class="card" style="background: white; border: 1px solid ${COLOR_MINT.mintLight};">
+          <h3 style="font-weight:700; margin-bottom:12px; color: ${COLOR_MINT.emeraldDark};">📅 Próximos Turnos</h3>
+          ${filasProximos}
+        </div>
+      </div>
+    `;
+  } else if (usuario.rol === 'RECEPCIONISTA') {
     htmlEspecialidades = `
       <div class="card" style="background: white; border: 1px solid ${COLOR_MINT.mintLight};"><h3 style="font-weight:700; margin-bottom:16px; color: ${COLOR_MINT.emeraldDark};">Especialidades Activas</h3>
         <div class="grid-branches">
@@ -444,6 +515,7 @@ async function renderDashboard() {
         <div class="card" style="border-left:4px solid ${COLOR_MINT.waterGreen}; background: white;"><div style="font-size:28px; font-weight:800; color:${COLOR_MINT.waterGreen};">${totalPendientes}</div><div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:5px;">Turnos pendientes</div></div>
         <div class="card" style="border-left:4px solid ${COLOR_MINT.vibrantMint}; background: white;"><div style="font-size:28px; font-weight:800; color:${COLOR_MINT.vibrantMint};">${totalCompletados}</div><div style="color:${COLOR_MINT.lightGray}; font-size:13px; margin-top:5px;">Turnos Completados</div></div>
       </div>
+      ${htmlAdminCards}
       ${htmlEspecialidades}
     </div></div>
   `);
