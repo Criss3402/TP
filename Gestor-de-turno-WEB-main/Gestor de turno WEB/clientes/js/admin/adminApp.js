@@ -199,7 +199,7 @@ async function guardarMedico() {
     }
     const respuesta = await api.crearMedico({ nombre, apellido, username: email, dni, telefono, matricula, especialidadId: espId || null, password });
     if (!respuesta.success) { notificar('❌ ' + respuesta.error, 'error'); return; }
-    notificar('✅ Médico creado. Contraseña: ' + password);
+    notificar('✅ Médico creado correctamente.');
   }
 
   const datosNuevos = await api.getUsuarios();
@@ -288,7 +288,7 @@ function abrirFormCrearRecepcionista() {
         </div>
         <div>
           <label style="color:${COLOR_MINT.emeraldDark}; font-weight:600; font-size:13px;">Contraseña inicial</label>
-          <input id="recep-pass" type="password" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333; width:100%; margin-top:4px;" placeholder="Mínimo 4 caracteres" />
+          <input id="recep-pass" type="password" class="input" style="border:1px solid ${COLOR_MINT.mintLight}; background:white; color:#333; width:100%; margin-top:4px;" placeholder="Mínimo 6 caracteres" />
         </div>
       </div>
       <div style="display:flex; gap:10px; margin-top:24px;">
@@ -443,7 +443,7 @@ function calcularEstadisticas(todo = false) {
   if (total > 0) {
     let startAngle = 0;
     const cx = 120, cy = 120, r = 100;
-    Object.entries(porEstado).forEach(([estado, count]) => {
+    Object.entries(porEstado).forEach(([est, count]) => {
       if (count === 0) return;
       const angle = (count / total) * 360;
       const endAngle = startAngle + angle;
@@ -452,7 +452,7 @@ function calcularEstadisticas(todo = false) {
       const x2 = cx + r * Math.cos((endAngle - 90) * Math.PI / 180);
       const y2 = cy + r * Math.sin((endAngle - 90) * Math.PI / 180);
       const largeArc = angle > 180 ? 1 : 0;
-      svgTorta += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z" fill="${coloresTorta[estado]}" stroke="white" stroke-width="2"/>`;
+      svgTorta += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z" fill="${coloresTorta[est]}" stroke="white" stroke-width="2"/>`;
       startAngle = endAngle;
     });
   } else {

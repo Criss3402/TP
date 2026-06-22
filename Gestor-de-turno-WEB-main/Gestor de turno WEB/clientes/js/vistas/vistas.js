@@ -280,7 +280,7 @@ function mostrarRegistro(errorMsg = '') {
           <div style="display:flex; gap:12px; margin-top:12px;">
             <div class="field" style="flex:1; margin-bottom:0;">
               <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Contraseña</label>
-              <input id="reg-pass" class="input mint-input" type="password" placeholder="Mínimo 4 caracteres" />
+              <input id="reg-pass" class="input mint-input" type="password" placeholder="Mínimo 6 caracteres" />
             </div>
             <div class="field" style="flex:1; margin-bottom:0;">
               <label style="color: ${COLOR_MINT.emeraldDark}; font-weight: 600; font-size: 13px;">Confirmar contraseña</label>

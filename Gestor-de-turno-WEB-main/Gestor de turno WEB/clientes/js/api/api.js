@@ -26,6 +26,10 @@ const api = {
       password: password
     });
     if (authError || !authData.user) {
+      const msgLower = authError?.message?.toLowerCase() || '';
+      if (msgLower.includes('email not confirmed') || msgLower.includes('email_not_confirmed')) {
+        return { success: false, error: '⚠️ Necesitás confirmar tu email antes de iniciar sesión. Revisá tu bandeja de entrada (y carpeta de spam).' };
+      }
       return { success: false, error: 'Usuario o contraseña incorrectos' };
     }
 
@@ -450,12 +454,29 @@ api.getPacientes = async () => {
 
 // Crear cuenta de recepcionista (solo admin puede)
 api.crearRecepcionista = async (datos) => {
-    const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase
+    const clienteTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data: authData, error: authError } = await clienteTemp.auth.signUp({
+        email: datos.email,
+        password: datos.password || '123456'
+    });
+    if (authError || !authData.user) {
+        console.error('Error signUp recepcionista:', authError);
+        if (authError?.message?.toLowerCase().includes('already')) {
+            return { success: false, error: 'Ese correo ya está registrado.' };
+        }
+        return { success: false, error: 'No se pudo crear la cuenta de acceso: ' + (authError?.message || 'error desconocido') };
+    }
+    if (!authData.user.identities || authData.user.identities.length === 0) {
+        return { success: false, error: 'Ese correo ya fue registrado previamente pero no confirmó su email.' };
+    }
+
+    const { error: errorUsuario } = await clienteSupabase
         .from('usuarios')
-        .insert([{ email: datos.email, rol: 'recepcionista', contrasenia: datos.password || '123456' }])
+        .insert([{ email: datos.email, rol: 'recepcionista', auth_id: authData.user.id }])
         .select();
     if (errorUsuario) {
-        console.error('Error Supabase crearRecepcionista:', errorUsuario);
         if (errorUsuario.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
         return { success: false, error: `Error BD: ${errorUsuario.message}` };
     }

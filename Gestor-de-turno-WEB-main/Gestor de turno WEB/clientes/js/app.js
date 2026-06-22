@@ -5,24 +5,6 @@ async function ejecutarLogin() {
   if (!username || !password) { mostrarLogin('Completá tu usuario y contraseña.'); return; }
 
   try {
-    // Intentar login con Supabase Auth directamente para detectar email no verificado
-    const { data: authCheck, error: authCheckError } = await clienteSupabase.auth.signInWithPassword({
-      email: username,
-      password: password
-    });
-
-    // Si Supabase devuelve error de email no confirmado
-    if (authCheckError) {
-      const msgLower = authCheckError.message?.toLowerCase() || '';
-      if (msgLower.includes('email not confirmed') || msgLower.includes('email_not_confirmed')) {
-        mostrarLogin('⚠️ Necesitás confirmar tu email antes de iniciar sesión. Revisá tu bandeja de entrada (y carpeta de spam).');
-        // Cerrar la sesión parcial que pudo haber quedado
-        await clienteSupabase.auth.signOut();
-        return;
-      }
-    }
-
-    // Si el login de Supabase Auth fue exitoso, continuar con el flujo normal
     const res = await api.login(username, password);
     if (!res.success) { mostrarLogin(res.error); return; }
 
@@ -50,10 +32,10 @@ async function ejecutarRegistroPaciente() {
     mostrarRegistroPaciente('Completá todos los campos obligatorios.');
     return;
   }
-    if (!password || password.length < 6) {
-      notificar('Ingresá una contraseña de al menos 6 caracteres.', 'error');
-      return;
-    }
+  if (password.length < 6) {
+    notificar('Ingresá una contraseña de al menos 6 caracteres.', 'error');
+    return;
+  }
   if (password !== password2) {
     mostrarRegistroPaciente('Las contraseñas no coinciden.');
     return;
@@ -61,7 +43,7 @@ async function ejecutarRegistroPaciente() {
 
   try {
     const res = await api.crearPaciente({ nombre, apellido, dni, telefono, email, password });
-    if (!res.success) { mostrarRegistro(res.error); return; }
+    if (!res.success) { mostrarRegistroPaciente(res.error); return; }
 
     // Enviar email de bienvenida (en segundo plano, no bloquea)
     emailService.enviarBienvenida({
@@ -72,7 +54,7 @@ async function ejecutarRegistroPaciente() {
     // Mostrar pantalla de verificación de email
     mostrarRegistroExitoso(email);
   } catch (err) {
-    mostrarRegistro('Error al conectar con el servidor.');
+    notificar('Error al conectar con el servidor.', 'error');
   }
 }
 
