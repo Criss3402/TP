@@ -438,12 +438,25 @@ api.getPacientes = async () => {
     };
 };
 
+
 // Crear cuenta de recepcionista (solo admin puede)
 api.crearRecepcionista = async (datos) => {
-    const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase
+    const clienteTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const { data: authData, error: authError } = await clienteTemp.auth.signUp({
+        email: datos.email,
+        password: datos.password || '123456'
+    });
+    if (authError || !authData.user) {
+        if (authError?.message?.toLowerCase().includes('already')) {
+            return { success: false, error: 'Ese correo ya está registrado.' };
+        }
+        return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+    }
+    const { error: errorUsuario } = await clienteSupabase
         .from('usuarios')
-        .insert([{ email: datos.email, rol: 'recepcionista', contrasenia: datos.password || '123456' }])
-        .select();
+        .insert([{ email: datos.email, rol: 'recepcionista', auth_id: authData.user.id }]);
     if (errorUsuario) {
         console.error('Error Supabase crearRecepcionista:', errorUsuario);
         if (errorUsuario.code === '23505') return { success: false, error: 'Ese correo ya está registrado.' };
@@ -451,6 +464,9 @@ api.crearRecepcionista = async (datos) => {
     }
     return { success: true };
 };
+
+
+
 api.registrarAusencia = async (idPaciente) => {
     // Incrementar contador de ausencias
     const { data, error: errorGet } = await clienteSupabase
