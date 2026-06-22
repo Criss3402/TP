@@ -162,10 +162,15 @@ const api = {
       password: datos.password || '123456'
     });
     if (authError || !authData.user) {
+      console.error('Error signUp médico:', authError);
       if (authError?.message?.toLowerCase().includes('already')) {
         return { success: false, error: 'Ese correo ya está registrado.' };
       }
-      return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+      return { success: false, error: 'No se pudo crear la cuenta de acceso: ' + (authError?.message || 'error desconocido') };
+    }
+    // Detectar usuario falso (email ya registrado pero sin confirmar)
+    if (!authData.user.identities || authData.user.identities.length === 0) {
+      return { success: false, error: 'Ese correo ya fue registrado previamente pero no confirmó su email. Usá otro correo o pedí que confirme el email anterior.' };
     }
 
     const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase
@@ -208,10 +213,15 @@ const api = {
       password: datos.password
     });
     if (authError || !authData.user) {
+      console.error('Error signUp paciente:', authError);
       if (authError?.message?.toLowerCase().includes('already')) {
         return { success: false, error: 'Ese correo ya está registrado.' };
       }
-      return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+      return { success: false, error: 'No se pudo crear la cuenta de acceso: ' + (authError?.message || 'error desconocido') };
+    }
+    // Detectar usuario falso (email ya registrado pero sin confirmar)
+    if (!authData.user.identities || authData.user.identities.length === 0) {
+      return { success: false, error: 'Ese correo ya fue registrado previamente pero no confirmó su email. Usá otro correo o pedí que confirme el email anterior.' };
     }
 
     const { data: usuarioCreado, error: errorUsuario } = await clienteSupabase

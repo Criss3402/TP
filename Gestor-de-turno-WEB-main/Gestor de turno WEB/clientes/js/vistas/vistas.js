@@ -303,6 +303,70 @@ function mostrarRegistro(errorMsg = '') {
 // Alias para compatibilidad
 function mostrarRegistroPaciente(errorMsg = '') { mostrarRegistro(errorMsg); }
 
+function mostrarRegistroExitoso(email) {
+  renderizar(`
+    ${estilosLoginComunes}
+    <style>
+      @keyframes float-email {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+      .email-icon-animated {
+        font-size: 64px;
+        animation: float-email 2.5s ease-in-out infinite;
+        display: inline-block;
+      }
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: rgba(55, 138, 221, 0.06);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: ${COLOR_MINT.emeraldDark};
+      }
+      .check-item span.check-icon {
+        color: ${COLOR_MINT.vibrantMint};
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+    </style>
+    <div class="auth-background">
+      <div class="glass-box" style="max-width: 500px; text-align: center;">
+        <div class="email-icon-animated">📧</div>
+        <h2 class="text-emerald-main" style="font-size: 24px; margin: 16px 0 8px 0;">¡Cuenta creada con éxito!</h2>
+        <p style="color: ${COLOR_MINT.lightGray}; font-size: 14px; margin: 0 0 8px 0;">Te enviamos un email de verificación a:</p>
+        <p style="color: ${COLOR_MINT.emeraldDark}; font-weight: 700; font-size: 16px; margin: 0 0 24px 0; word-break: break-all;">${email}</p>
+
+        <div style="background: ${COLOR_MINT.bgTint}; border: 1px solid ${COLOR_MINT.mintLight}; border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 24px;">
+          <p style="color: ${COLOR_MINT.emeraldDark}; font-weight: 700; font-size: 14px; margin: 0 0 14px 0;">Para completar tu registro:</p>
+          <div class="check-item">
+            <span class="check-icon">1️⃣</span>
+            <span>Abrí tu bandeja de entrada (revisá <strong>spam</strong> también)</span>
+          </div>
+          <div class="check-item">
+            <span class="check-icon">2️⃣</span>
+            <span>Hacé clic en el <strong>link de verificación</strong> del email</span>
+          </div>
+          <div class="check-item">
+            <span class="check-icon">3️⃣</span>
+            <span>Volvé acá e <strong>iniciá sesión</strong> con tu cuenta</span>
+          </div>
+        </div>
+
+        <button class="btn-mint-submit" onclick="mostrarLogin()" style="margin-bottom: 12px;">
+          ← Ir al inicio de sesión
+        </button>
+        <p style="color: ${COLOR_MINT.lightGray}; font-size: 12px; margin: 0;">
+          ¿No recibiste el email? Revisá tu carpeta de spam o intentá registrarte nuevamente.
+        </p>
+      </div>
+    </div>
+  `);
+}
+
 function badgeEstado(estadoStr) {
   const config = { Solicitado: { color: '#f4a261', label: 'Solicitado' }, Confirmado: { color: '#4cc9f0', label: 'Confirmado' }, Atendido: { color: '#2a9d8f', label: 'Atendido' }, Cancelado: { color: '#e63946', label: 'Cancelado' }, Ausente: { color: '#e63946', label: 'Ausente' } };
   const c = config[estadoStr] || { color: '#888', label: estadoStr };

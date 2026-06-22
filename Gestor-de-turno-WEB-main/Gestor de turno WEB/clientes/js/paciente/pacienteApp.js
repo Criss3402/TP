@@ -61,7 +61,26 @@ async function confirmarTurno() {
         estado.pagos = resPagos.data;
     }
 
-    // 5. Limpiamos la memoria temporal y lo mandamos a su panel de turnos
+    // 5. Enviar email de confirmación al paciente (en segundo plano)
+    try {
+      const esp = estado.especialidades.find(e => e.id == estado.nuevoTurno.especialidadId);
+      const doc = estado.usuarios.find(u => u.id == estado.nuevoTurno.doctorId);
+      emailService.enviarConfirmacionTurno({
+        to_email:     estado.usuario.username,
+        to_name:      estado.usuario.nombreCompleto,
+        especialidad: esp ? esp.nombre : 'General',
+        doctor:       doc ? doc.nombreCompleto : 'Sin asignar',
+        fecha:        estado.nuevoTurno.fecha,
+        hora:         estado.nuevoTurno.hora,
+        turno_id:     resTurnos.data?.length ? resTurnos.data[resTurnos.data.length - 1].id : 0
+      }).then(res => {
+        if (res.success) notificar('📧 Te enviamos un email de confirmación.');
+      });
+    } catch (e) {
+      console.warn('No se pudo enviar email de confirmación:', e);
+    }
+
+    // 6. Limpiamos la memoria temporal y lo mandamos a su panel de turnos
     estado.nuevoTurno = { paso: 1, especialidadId: null, doctorId: null, fecha: '', hora: '' };
     navegarA('mis_turnos');
     

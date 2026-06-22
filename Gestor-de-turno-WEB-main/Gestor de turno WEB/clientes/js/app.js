@@ -5,6 +5,24 @@ async function ejecutarLogin() {
   if (!username || !password) { mostrarLogin('Completá tu usuario y contraseña.'); return; }
 
   try {
+    // Intentar login con Supabase Auth directamente para detectar email no verificado
+    const { data: authCheck, error: authCheckError } = await clienteSupabase.auth.signInWithPassword({
+      email: username,
+      password: password
+    });
+
+    // Si Supabase devuelve error de email no confirmado
+    if (authCheckError) {
+      const msgLower = authCheckError.message?.toLowerCase() || '';
+      if (msgLower.includes('email not confirmed') || msgLower.includes('email_not_confirmed')) {
+        mostrarLogin('⚠️ Necesitás confirmar tu email antes de iniciar sesión. Revisá tu bandeja de entrada (y carpeta de spam).');
+        // Cerrar la sesión parcial que pudo haber quedado
+        await clienteSupabase.auth.signOut();
+        return;
+      }
+    }
+
+    // Si el login de Supabase Auth fue exitoso, continuar con el flujo normal
     const res = await api.login(username, password);
     if (!res.success) { mostrarLogin(res.error); return; }
 
@@ -32,10 +50,10 @@ async function ejecutarRegistroPaciente() {
     mostrarRegistroPaciente('Completá todos los campos obligatorios.');
     return;
   }
-  if (password.length < 6) {
-    mostrarRegistroPaciente('La contraseña debe tener al menos 6 caracteres.');
-    return;
-  }
+    if (!password || password.length < 6) {
+      notificar('Ingresá una contraseña de al menos 6 caracteres.', 'error');
+      return;
+    }
   if (password !== password2) {
     mostrarRegistroPaciente('Las contraseñas no coinciden.');
     return;
@@ -44,8 +62,15 @@ async function ejecutarRegistroPaciente() {
   try {
     const res = await api.crearPaciente({ nombre, apellido, dni, telefono, email, password });
     if (!res.success) { mostrarRegistro(res.error); return; }
-    notificar('✅ Cuenta creada. Ya podés iniciar sesión.');
-    mostrarLogin();
+
+    // Enviar email de bienvenida (en segundo plano, no bloquea)
+    emailService.enviarBienvenida({
+      to_email: email,
+      to_name: `${nombre} ${apellido}`.trim()
+    }).catch(e => console.warn('No se pudo enviar email de bienvenida:', e));
+
+    // Mostrar pantalla de verificación de email
+    mostrarRegistroExitoso(email);
   } catch (err) {
     mostrarRegistro('Error al conectar con el servidor.');
   }
@@ -129,10 +154,15 @@ api.crearUsuarioGenerico = async (email, password, rol, nombre, apellido, dni, t
     });
     const { data: authData, error: authError } = await clienteTemp.auth.signUp({ email, password });
     if (authError || !authData.user) {
+        console.error('Error signUp genérico:', authError);
         if (authError?.message?.toLowerCase().includes('already')) {
             return { success: false, error: 'Ese correo ya está registrado.' };
         }
-        return { success: false, error: 'No se pudo crear la cuenta de acceso.' };
+        return { success: false, error: 'No se pudo crear la cuenta de acceso: ' + (authError?.message || 'error desconocido') };
+    }
+    // Detectar usuario falso (email ya registrado pero sin confirmar)
+    if (!authData.user.identities || authData.user.identities.length === 0) {
+        return { success: false, error: 'Ese correo ya fue registrado previamente pero no confirmó su email. Usá otro correo o pedí que confirme el email anterior.' };
     }
 
     const { data, error } = await clienteSupabase
