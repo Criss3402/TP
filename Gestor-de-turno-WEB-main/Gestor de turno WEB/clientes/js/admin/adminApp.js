@@ -262,6 +262,32 @@ async function confirmarTurnoRecepcionista(idPaciente) {
 
   if (!idMedico || !fecha || !hora) { notificar('Completá todos los campos.', 'error'); return; }
 
+    // Helper: "HH:MM" o "HH:MM:SS" -> minutos
+  const aMin = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const diaSemana = new Date(fecha + 'T00:00:00').getDay();
+  const horaMin = aMin(hora);
+
+  // 1. ¿El médico atiende ese día y a esa hora?
+  const bloques = estado.agendas.filter(a => a.doctorId == idMedico && a.diaSemana === diaSemana);
+  const atiende = bloques.some(b => horaMin >= aMin(b.horaInicio) && horaMin < aMin(b.horaFin));
+  if (!atiende) { notificar('El médico no atiende ese día u horario.', 'error'); return; }
+
+  // 2. ¿Ya hay un turno del mismo médico en esa fecha y hora?
+  const yaExiste = estado.turnos.some(t =>
+    t.medicoId == idMedico && t.fecha === fecha && aMin(t.hora) === horaMin &&
+    (t.estado === 'Solicitado' || t.estado === 'Confirmado')
+  );
+  if (yaExiste) { notificar('Ya existe un turno para ese médico en esa fecha y hora.', 'error'); return; }
+
+  // 3. ¿El médico llegó a su límite diario?
+  const docSel = estado.usuarios.find(u => u.id == idMedico);
+  const limite = docSel?.limiteTurnosDia || 10;
+  const turnosEseDia = estado.turnos.filter(t =>
+    t.medicoId == idMedico && t.fecha === fecha &&
+    (t.estado === 'Solicitado' || t.estado === 'Confirmado')
+  ).length;
+  if (turnosEseDia >= limite) { notificar('El médico alcanzó su límite de turnos para ese día.', 'error'); return; }
+
   const respuesta = await api.crearTurnoRecepcionista({ idPaciente, idMedico, fecha, hora });
   if (!respuesta.success) { notificar('❌ ' + respuesta.error, 'error'); return; }
 

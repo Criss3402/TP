@@ -104,6 +104,7 @@ const api = {
     doctorNombre: med ? `${med.nombre} ${med.apellido}`.trim() : 'Sin asignar',
     pacienteNombre: pac ? `${pac.nombre} ${pac.apellido}`.trim() : 'Sin asignar',
     pacienteId: t.id_paciente,
+    medicoId: t.id_medico,
     especialidadId: med ? med.id_especialidad : null,
     diagnostico: t.diagnostico || '',
     indicaciones: t.indicaciones || ''
@@ -144,6 +145,7 @@ const api = {
     username: usr.email, 
     rol: rolFrontend, 
     especialidadId: especialidadId,
+    matricula: med?.matricula || '',
     dni: usr.dni || '',
     telefono: usr.telefono || '',
     nombreCompleto: `${nombre} ${apellido}`.trim(),
